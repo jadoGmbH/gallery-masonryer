@@ -4,24 +4,25 @@
  * Description: Erweitert Gutenberg Gallery Blocks mit Orientierungs-basierten Grid-Layouts.
  * Version: 1.2.0
  * Author: jado GmbH
+ * Text Domain: gallery-masonryer
+ * Domain Path: /languages
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Direktzugriff verhindern
 
 class GalleryMasonryer {
-
     public function __construct() {
+        load_plugin_textdomain('gallery-masonryer', false, dirname(plugin_basename(__FILE__)) . '/languages');
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
-
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         add_action('wp_head', [$this, 'output_custom_styles']);
     }
 
     public function add_settings_page() {
         add_options_page(
-                'Gallery Masonryer',
-                'Gallery Masonryer',
+                __('Gallery Masonryer', 'gallery-masonryer'),
+                __('Gallery Masonryer', 'gallery-masonryer'),
                 'manage_options',
                 'gallery-masonryer',
                 [$this, 'settings_page_html']
@@ -49,51 +50,61 @@ class GalleryMasonryer {
     public function settings_page_html() {
         ?>
         <div class="wrap">
-            <h1>Gallery Masonryer Einstellungen</h1>
+            <h1><?php _e('Gallery Masonryer Einstellungen', 'gallery-masonryer'); ?></h1>
             <form method="post" action="options.php">
                 <?php settings_fields('gallery_masonryer_options'); ?>
                 <table class="form-table">
                     <tr>
-                        <th scope="row"><label for="gallery_gap">Gap zwischen Bildern</label></th>
-                        <td><input type="number" id="gallery_gap" name="gallery_gap" value="<?php echo esc_attr(get_option('gallery_gap', 10)); ?>" min="0" max="50"> px</td>
+                        <th scope="row"><label for="gallery_gap"><?php _e('Gap zwischen Bildern', 'gallery-masonryer'); ?></label></th>
+                        <td><input type="number" id="gallery_gap" name="gallery_gap" value="<?php echo esc_attr(get_option('gallery_gap', 10)); ?>" min="0" max="150"> px</td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="gallery_radius">Border Radius</label></th>
-                        <td><input type="text" id="gallery_radius" name="gallery_radius" value="<?php echo esc_attr(get_option('gallery_radius', '0px')); ?>" placeholder="z.B. 8px oder 0.5rem"></td>
+                        <th scope="row"><label for="gallery_radius"><?php _e('Border Radius', 'gallery-masonryer'); ?></label></th>
+                        <td><input type="text" id="gallery_radius" name="gallery_radius" value="<?php echo esc_attr(get_option('gallery_radius', '0px')); ?>" placeholder="<?php _e('z.B. 8px oder 0.5rem', 'gallery-masonryer'); ?>"></td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="random_placement">Zufällige Platzierung</label></th>
+                        <th scope="row"><label for="random_placement"><?php _e('Zufällige Platzierung', 'gallery-masonryer'); ?></label></th>
                         <td>
                             <input type="checkbox" id="random_placement" name="random_placement" value="1" <?php checked(1, get_option('random_placement', false)); ?>>
-                            <label for="random_placement">CSS Grid Dense Auto-Placement verwenden</label>
+                            <label for="random_placement"><?php _e('CSS Grid Dense Auto-Placement verwenden', 'gallery-masonryer'); ?></label>
                         </td>
                     </tr>
                 </table>
                 <?php submit_button(); ?>
             </form>
             <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0073aa;">
-                <h3>Hinweis:</h3>
-                <p><strong>Bildgrößen:</strong></p>
+                <h3><?php _e('Hinweis:', 'gallery-masonryer'); ?></h3>
+                <p><strong><?php _e('Bildgrößen:', 'gallery-masonryer'); ?></strong></p>
                 <ul>
-                    <li><strong>Landscape:</strong> 2x1 Verhältnis (nimmt 2 Spalten ein)</li>
-                    <li><strong>Portrait:</strong> 1x2 Verhältnis (nimmt 2 Zeilen ein)</li>
-                    <li><strong>Square:</strong> 1x1 Verhältnis</li>
+                    <li><strong><?php _e('Landscape:', 'gallery-masonryer'); ?></strong> <?php _e('2x1 Verhältnis (nimmt 2 Spalten ein)', 'gallery-masonryer'); ?></li>
+                    <li><strong><?php _e('Portrait:', 'gallery-masonryer'); ?></strong> <?php _e('1x2 Verhältnis (nimmt 2 Zeilen ein)', 'gallery-masonryer'); ?></li>
+                    <li><strong><?php _e('Square:', 'gallery-masonryer'); ?></strong> <?php _e('1x1 Verhältnis', 'gallery-masonryer'); ?></li>
                 </ul>
-                <p>Die Anzahl der Spalten wird aus den Gutenberg Gallery Block Einstellungen übernommen.</p>
+                <p><?php _e('Die Anzahl der Spalten wird aus den Gutenberg Gallery Block Einstellungen übernommen.', 'gallery-masonryer'); ?></p>
             </div>
         </div>
         <?php
     }
 
+
     public function enqueue_assets() {
         wp_register_script(
                 'gallery-masonryer',
-                '',
+                '', // kein externes Script
                 [],
                 '1.2.0',
                 true
         );
+
+        // Übersetzbare Strings an JS übergeben
+        $translation_strings = [
+                'landscape' => __('Landscape', 'gallery-masonryer'),
+                'portrait'  => __('Portrait', 'gallery-masonryer'),
+                'square'    => __('Square', 'gallery-masonryer'),
+        ];
+
         wp_enqueue_script('gallery-masonryer');
+        wp_add_inline_script('gallery-masonryer', 'const GalleryMasonryerStrings = ' . wp_json_encode($translation_strings) . ';');
         wp_add_inline_script('gallery-masonryer', $this->get_script());
     }
 
@@ -281,14 +292,11 @@ class GalleryMasonryer {
                 border-bottom-right-radius: <?php echo $radius; ?>;
             }
 
-            .wp-block-image.masonryer-item figcaption::before {
-                border-bottom-left-radius: <?php echo $radius; ?>;
-                border-bottom-right-radius: <?php echo $radius; ?>;
-            }
-
             .wp-block-gallery.has-nested-images figure.wp-block-image:has(figcaption):before{
                 -webkit-backdrop-filter: blur(0) !important;
                 backdrop-filter: blur(0) !important;
+                border-bottom-left-radius: <?php echo $radius; ?>;
+                border-bottom-right-radius: <?php echo $radius; ?>;
             }
 
             @media (max-width: 1024px) {
