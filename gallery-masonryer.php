@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gallery Masonryer
  * Description: Erweitert Gutenberg Gallery Blocks mit Orientierungs-basierten Grid-Layouts.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: jado GmbH
  * Text Domain: gallery-masonryer
  * Domain Path: /languages
@@ -60,10 +60,26 @@ class GalleryMasonryer
                 },
                 'default' => false,
         ]);
+        register_setting('gallery_masonryer_options', 'lightbox_background_color', [
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_hex_color',
+                'default' => '#000000',
+        ]);
+        register_setting('gallery_masonryer_options', 'lightbox_background_opacity', [
+                'type' => 'integer',
+                'sanitize_callback' => function ($val) {
+                    return max(10, min(100, absint($val)));
+                },
+                'default' => 90,
+        ]);
     }
 
     public function settings_page_html()
     {
+        // WordPress Color Picker einbinden
+        wp_enqueue_style('wp-color-picker');
+        wp_enqueue_script('wp-color-picker');
+
         ?>
         <div class="wrap">
             <h1><?php _e('Gallery Masonryer Einstellungen', 'gallery-masonryer'); ?></h1>
@@ -105,26 +121,107 @@ class GalleryMasonryer
                             <label for="enable_lightbox"><?php _e('Aktiviere eine einfache, funktionsfähige Lightbox', 'gallery-masonryer'); ?></label>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row"><label
+                                    for="lightbox_background_color"><?php _e('Lightbox Hintergrundfarbe', 'gallery-masonryer'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="lightbox_background_color" name="lightbox_background_color"
+                                   value="<?php echo esc_attr(get_option('lightbox_background_color', '#000000')); ?>"
+                                   class="color-picker" data-default-color="#000000">
+                            <p class="description">
+                                <?php _e('Wählen Sie die Grundfarbe für den Lightbox-Hintergrund.', 'gallery-masonryer'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label
+                                    for="lightbox_background_opacity"><?php _e('Lightbox Hintergrund Transparenz', 'gallery-masonryer'); ?></label>
+                        </th>
+                        <td>
+                            <input type="range" id="lightbox_background_opacity" name="lightbox_background_opacity"
+                                   value="<?php echo esc_attr(get_option('lightbox_background_opacity', 90)); ?>"
+                                   min="10" max="100" step="5">
+                            <span id="opacity-value"><?php echo esc_attr(get_option('lightbox_background_opacity', 90)); ?>%</span>
+                            <p class="description">
+                                <?php _e('Bestimmen Sie die Transparenz des Hintergrunds (10% = sehr transparent, 100% = komplett deckend).', 'gallery-masonryer'); ?>
+                            </p>
+                        </td>
+                    </tr>
                 </table>
                 <?php submit_button(); ?>
             </form>
-            <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0073aa;">
-                <h3><?php _e('Hinweis:', 'gallery-masonryer'); ?></h3>
-                <p><strong><?php _e('Bildgrößen:', 'gallery-masonryer'); ?></strong></p>
-                <ul>
-                    <li>
-                        <strong><?php _e('Landscape:', 'gallery-masonryer'); ?></strong> <?php _e('2x1 Verhältnis (nimmt 2 Spalten ein)', 'gallery-masonryer'); ?>
-                    </li>
-                    <li>
-                        <strong><?php _e('Portrait:', 'gallery-masonryer'); ?></strong> <?php _e('1x2 Verhältnis (nimmt 2 Zeilen ein)', 'gallery-masonryer'); ?>
-                    </li>
-                    <li>
-                        <strong><?php _e('Square:', 'gallery-masonryer'); ?></strong> <?php _e('1x1 Verhältnis', 'gallery-masonryer'); ?>
-                    </li>
-                </ul>
-                <p><?php _e('Die Anzahl der Spalten wird aus den Gutenberg Gallery Block Einstellungen übernommen.', 'gallery-masonryer'); ?></p>
+
+            <!-- Live-Vorschau -->
+            <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #0073aa;">
+                <h3><?php _e('Live-Vorschau:', 'gallery-masonryer'); ?></h3>
+                <div id="lightbox-preview" style="width: 200px; height: 100px; border: 2px solid #ddd; border-radius: 4px; position: relative; overflow: hidden; background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;">
+                    <div id="preview-overlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                        <?php _e('Lightbox Hintergrund', 'gallery-masonryer'); ?>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0073aa;">
+            <h3><?php _e('Hinweis:', 'gallery-masonryer'); ?></h3>
+            <p><strong><?php _e('Bildgrößen:', 'gallery-masonryer'); ?></strong></p>
+            <ul>
+                <li>
+                    <strong><?php _e('Landscape:', 'gallery-masonryer'); ?></strong> <?php _e('2x1 Verhältnis (nimmt 2 Spalten ein)', 'gallery-masonryer'); ?>
+                </li>
+                <li>
+                    <strong><?php _e('Portrait:', 'gallery-masonryer'); ?></strong> <?php _e('1x2 Verhältnis (nimmt 2 Zeilen ein)', 'gallery-masonryer'); ?>
+                </li>
+                <li>
+                    <strong><?php _e('Square:', 'gallery-masonryer'); ?></strong> <?php _e('1x1 Verhältnis', 'gallery-masonryer'); ?>
+                </li>
+            </ul>
+            <p><?php _e('Die Anzahl der Spalten wird aus den Gutenberg Gallery Block Einstellungen übernommen.', 'gallery-masonryer'); ?></p>
+        </div>
+        </div>
+
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // WordPress Color Picker initialisieren
+                $('.color-picker').wpColorPicker({
+                    change: function(event, ui) {
+                        updatePreview();
+                    },
+                    clear: function() {
+                        updatePreview();
+                    }
+                });
+
+                // Opacity Slider Handler
+                $('#lightbox_background_opacity').on('input', function() {
+                    $('#opacity-value').text($(this).val() + '%');
+                    updatePreview();
+                });
+
+                // Live-Vorschau aktualisieren
+                function updatePreview() {
+                    var color = $('#lightbox_background_color').val() || '#000000';
+                    var opacity = $('#lightbox_background_opacity').val() / 100;
+
+                    // Hex zu RGB konvertieren
+                    var r = parseInt(color.substr(1,2), 16);
+                    var g = parseInt(color.substr(3,2), 16);
+                    var b = parseInt(color.substr(5,2), 16);
+
+                    var rgba = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+                    $('#preview-overlay').css('background-color', rgba);
+
+                    // Textfarbe anpassen für bessere Lesbarkeit
+                    var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                    var textColor = brightness > 128 ? '#333333' : '#ffffff';
+                    $('#preview-overlay').css('color', textColor);
+                }
+
+                // Initiale Vorschau
+                updatePreview();
+            });
+        </script>
         <?php
     }
 
@@ -135,7 +232,7 @@ class GalleryMasonryer
                 'gallery-masonryer',
                 '', // Inline Script
                 [], // Keine Abhängigkeiten
-                '1.3.0',
+                '1.3.1',
                 true
         );
         wp_enqueue_script('gallery-masonryer');
@@ -145,7 +242,7 @@ class GalleryMasonryer
                 'gallery-masonryer-lightbox',
                 '', // Inline CSS
                 [],
-                '1.3.0'
+                '1.3.1'
         );
         wp_enqueue_style('gallery-masonryer-lightbox');
 
@@ -164,8 +261,33 @@ class GalleryMasonryer
         }
     }
 
+    private function get_lightbox_background_style()
+    {
+        $color = get_option('lightbox_background_color', '#000000');
+        $opacity = get_option('lightbox_background_opacity', 90) / 100;
+
+        // Hex zu RGB konvertieren
+        $color = str_replace('#', '', $color);
+        $r = hexdec(substr($color, 0, 2));
+        $g = hexdec(substr($color, 2, 2));
+        $b = hexdec(substr($color, 4, 2));
+
+        return "rgba({$r}, {$g}, {$b}, {$opacity})";
+    }
+
     private function get_lightbox_styles()
     {
+        $background_color = $this->get_lightbox_background_style();
+
+        // Textfarbe basierend auf Hintergrundfarbe berechnen
+        $color = get_option('lightbox_background_color', '#000000');
+        $color = str_replace('#', '', $color);
+        $r = hexdec(substr($color, 0, 2));
+        $g = hexdec(substr($color, 2, 2));
+        $b = hexdec(substr($color, 4, 2));
+        $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
+        $text_color = $brightness > 128 ? '#333333' : '#ffffff';
+
         return <<<CSS
 /* Simple Lightbox Styles */
 .simple-lightbox {
@@ -176,7 +298,7 @@ class GalleryMasonryer
     top: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    background-color: rgba(0, 0, 0, 0.9) !important;
+    background-color: {$background_color} !important;
     animation: fadeIn 0.3s !important;
     box-sizing: border-box !important;
 }
@@ -199,15 +321,19 @@ class GalleryMasonryer
     position: absolute !important;
     top: 20px !important;
     right: 30px !important;
-    color: white !important;
-    font-size: 40px !important;
-    font-weight: bold !important;
+    color: {$text_color} !important;
     cursor: pointer !important;
     user-select: none !important;
     background: none !important;
     border: none !important;
     padding: 10px !important;
     line-height: 1 !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+.simple-lightbox .close svg{
+width: 2rem;
+height: 2rem;
 }
 
 .simple-lightbox .close:hover {
@@ -218,19 +344,23 @@ class GalleryMasonryer
     position: absolute !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    color: white !important;
-    font-size: 30px !important;
+    color: {$text_color} !important;
     font-weight: bold !important;
     cursor: pointer !important;
     user-select: none !important;
-    background: rgba(0, 0, 0, 0.5) !important;
+    background: rgba(0, 0, 0, 0.3) !important;
     border: none !important;
-    padding: 15px 20px !important;
+    padding: 8px 8px !important;
     border-radius: 4px !important;
 }
 
+.simple-lightbox .nav svg{
+width: 2rem;
+height: 2rem;
+}
+
 .simple-lightbox .nav:hover {
-    background: rgba(0, 0, 0, 0.8) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
 }
 
 .simple-lightbox .prev {
@@ -247,11 +377,14 @@ class GalleryMasonryer
 }
 
 .masonryer-item.lightbox-enabled {
-    cursor: pointer !important;
+    overflow: hidden;
+}
+
+.masonryer-item.lightbox-enabled img {
     transition: transform 0.2s ease !important;
 }
 
-.masonryer-item.lightbox-enabled:hover {
+.masonryer-item.lightbox-enabled img:hover {
     transform: scale(1.02) !important;
 }
 CSS;
@@ -406,9 +539,23 @@ CSS;
         lightboxElement = document.createElement('div');
         lightboxElement.className = 'simple-lightbox';
         lightboxElement.innerHTML = `
-            <button class="close">&times;</button>
-            <button class="nav prev">&#10094;</button>
-            <button class="nav next">&#10095;</button>
+            <button class="close"><svg width="100%" height="100%" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,0.708,0.707)">
+        <g id="if_misc-_close__1276877_3_">
+            <path d="M4.293,5L-0.354,0.354C-0.549,0.158 -0.549,-0.158 -0.354,-0.354C-0.158,-0.549 0.158,-0.549 0.354,-0.354L5,4.293L9.646,-0.354C9.842,-0.549 10.158,-0.549 10.354,-0.354C10.549,-0.158 10.549,0.158 10.354,0.354L5.707,5L10.354,9.646C10.549,9.842 10.549,10.158 10.354,10.354C10.158,10.549 9.842,10.549 9.646,10.354L5,5.707L0.354,10.354C0.158,10.549 -0.158,10.549 -0.354,10.354C-0.549,10.158 -0.549,9.842 -0.354,9.646L4.293,5Z" style="fill:white;"/>
+        </g>
+    </g>
+</svg></button>
+            <button class="nav prev"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,4,0)">
+        <path d="M10.477,0.477C10.741,0.741 10.741,1.168 10.477,1.432L1.909,10L10.477,18.568C10.741,18.832 10.741,19.259 10.477,19.523C10.214,19.786 9.786,19.786 9.523,19.523L0.707,10.707C0.317,10.317 0.317,9.683 0.707,9.293L9.523,0.477C9.786,0.214 10.214,0.214 10.477,0.477Z" style="fill:white;fill-rule:nonzero;"/>
+    </g>
+</svg></button>
+            <button class="nav next"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,4,0)">
+        <path d="M1.377,19.523C1.114,19.259 1.114,18.832 1.377,18.568L9.945,10L1.377,1.432C1.114,1.168 1.114,0.741 1.377,0.477C1.641,0.214 2.068,0.214 2.332,0.477L11.147,9.293C11.538,9.683 11.538,10.317 11.147,10.707L2.332,19.523C2.068,19.786 1.641,19.786 1.377,19.523Z" style="fill:white;fill-rule:nonzero;"/>
+    </g>
+</svg></button>
             <img src="" alt="">
         `;
         
@@ -626,7 +773,7 @@ JS;
 
             /* Bild-Styling */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item img,
-            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item img {
+            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item img, .masonryer-item.lightbox-enabled {
                 width: 100% !important;
                 height: 100% !important;
                 object-fit: cover !important;
