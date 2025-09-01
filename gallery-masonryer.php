@@ -111,18 +111,12 @@ class GalleryMasonryer {
             const galleries = document.querySelectorAll('.wp-block-gallery');
             
             galleries.forEach(gallery => {
-                // Extrahiere Spaltenanzahl aus Gutenberg CSS-Variablen oder Klassen
                 const computedStyle = window.getComputedStyle(gallery);
                 let columns = extractColumnsFromGallery(gallery);
-                
-                // Setze CSS Custom Property für die Spaltenanzahl
                 gallery.style.setProperty('--gallery-columns', columns);
                 gallery.classList.add('masonryer-active');
-                
-                // Verarbeite alle Bilder
                 const images = gallery.querySelectorAll('.wp-block-image img');
                 let loadedImages = 0;
-                
                 images.forEach(img => {
                     if (img.complete && img.naturalHeight !== 0) {
                         setImageOrientation(img);
@@ -145,28 +139,19 @@ class GalleryMasonryer {
         }
 
         function extractColumnsFromGallery(gallery) {
-            // Versuche Spaltenanzahl aus verschiedenen Quellen zu extrahieren
-            
-            // 1. CSS Custom Property (neuere Gutenberg Versionen)
             const computedStyle = window.getComputedStyle(gallery);
             const cssColumns = computedStyle.getPropertyValue('--wp--style--unstable-gallery-gap');
-            
-            // 2. Aus Klassen (z.B. columns-3)
             const classList = Array.from(gallery.classList);
             const columnClass = classList.find(cls => cls.startsWith('columns-'));
             if (columnClass) {
                 const num = parseInt(columnClass.replace('columns-', ''));
                 if (num && num > 0) return num;
             }
-            
-            // 3. Aus data-Attributen
             const dataColumns = gallery.getAttribute('data-columns');
             if (dataColumns) {
                 const num = parseInt(dataColumns);
                 if (num && num > 0) return num;
             }
-            
-            // 4. Aus CSS grid-template-columns
             const gridColumns = computedStyle.gridTemplateColumns;
             if (gridColumns && gridColumns !== 'none') {
                 const matches = gridColumns.match(/repeat\\((\\d+),/);
@@ -175,31 +160,23 @@ class GalleryMasonryer {
                 const fractionCount = (gridColumns.match(/1fr/g) || []).length;
                 if (fractionCount > 0) return fractionCount;
             }
-            
-            // 5. Fallback: Zähle tatsächliche Kinder in der ersten Reihe
             const items = gallery.querySelectorAll('.wp-block-image');
             if (items.length > 0) {
-                // Einfache Heuristik basierend auf der Gesamtanzahl
                 if (items.length <= 2) return 2;
                 if (items.length <= 6) return 3;
                 if (items.length <= 12) return 4;
                 return 5;
             }
             
-            return 3; // Standard-Fallback
+            return 3; 
         }
 
         function setImageOrientation(img) {
             const parent = img.closest('.wp-block-image');
             if (!parent) return;
-            
             const { naturalWidth: w, naturalHeight: h } = img;
             const ratio = w / h;
-            
-            // Entferne alte Klassen
             parent.classList.remove('masonryer-landscape', 'masonryer-portrait', 'masonryer-square');
-            
-            // Setze neue Orientierungsklassen
             if (ratio > 1.2) {
                 parent.classList.add('masonryer-landscape');
             } else if (ratio < 0.8) {
@@ -207,11 +184,8 @@ class GalleryMasonryer {
             } else {
                 parent.classList.add('masonryer-square');
             }
-            
             parent.classList.add('masonryer-item');
         }
-
-        // Resize Handler
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
@@ -220,7 +194,6 @@ class GalleryMasonryer {
     })();
     JS;
     }
-
     public function output_custom_styles() {
         $gap = absint(get_option('gallery_gap', 10));
         $radius = esc_attr(get_option('gallery_radius', '0px'));
@@ -228,7 +201,6 @@ class GalleryMasonryer {
 
         ?>
         <style>
-            /* Override Gutenberg Gallery Styles - Mit Grid-Größen-Kompensation */
             .wp-block-gallery.masonryer-active.has-nested-images,
             .wp-block-gallery.masonryer-active.is-layout-flex,
             .wp-block-gallery.masonryer-active {
@@ -238,26 +210,18 @@ class GalleryMasonryer {
                 gap: <?php echo $gap; ?>px !important;
                 grid-auto-flow: <?php echo $random_placement; ?> !important;
                 position: relative;
-
-                /* Grid-Zeilenhöhe basierend auf Spaltenbreite für perfekte Squares */
                 grid-auto-rows: calc((100vw - <?php echo $gap * 4; ?>px) / var(--gallery-columns, 3)) !important;
-
-                /* Überschreibe alle Flexbox-Eigenschaften */
                 flex-direction: unset !important;
                 flex-wrap: unset !important;
                 align-items: unset !important;
                 justify-content: unset !important;
             }
-
-            /* Container-abhängige Zeilenhöhe für bessere Squares */
             @supports (container-type: inline-size) {
                 .wp-block-gallery.masonryer-active {
                     container-type: inline-size;
                     grid-auto-rows: calc((100cqw - <?php echo $gap * 2; ?>px) / var(--gallery-columns, 3)) !important;
                 }
             }
-
-            /* Grid Items - Überschreibe alle Gutenberg Figure-Styles */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item {
                 margin: 0 !important;
@@ -265,15 +229,12 @@ class GalleryMasonryer {
                 overflow: hidden;
                 display: flex !important;
                 position: relative;
-
-                /* Überschreibe Gutenberg Flex-Eigenschaften */
                 flex: none !important;
                 width: auto !important;
                 max-width: none !important;
                 min-width: 0 !important;
             }
 
-            /* Orientations with exact ratios - Perfekte Größen! */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-landscape {
                 grid-column: span 2 !important;
@@ -289,10 +250,7 @@ class GalleryMasonryer {
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-square {
                 aspect-ratio: unset !important;
-                /* Square nimmt genau eine Grid-Zelle ein */
             }
-
-            /* Images - Überschreibe alle Gutenberg Styles */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item img,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item img {
                 width: 100% !important;
@@ -300,21 +258,15 @@ class GalleryMasonryer {
                 object-fit: cover !important;
                 display: block !important;
                 border-radius: <?php echo $radius; ?>;
-
-                /* Entferne alle Gutenberg Image-Constraints */
                 max-width: none !important;
                 flex: none !important;
             }
-
-            /* Links innerhalb der Items */
             .wp-block-image.masonryer-item a {
                 display: block !important;
                 width: 100%;
                 height: 100%;
                 line-height: 0;
             }
-
-            /* Figcaptions */
             .wp-block-image.masonryer-item figcaption {
                 position: absolute;
                 bottom: 0;
@@ -325,27 +277,20 @@ class GalleryMasonryer {
                 padding: 20px 15px 10px;
                 margin: 0 !important;
                 font-size: 14px;
+                border-bottom-left-radius: <?php echo $radius; ?>;
+                border-bottom-right-radius: <?php echo $radius; ?>;
             }
 
-            <?php if ($enable_hover): ?>
-            /* Hover Effects */
-            .wp-block-image.masonryer-item:hover {
-                transform: scale(1.02);
-                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-                z-index: 2;
+            .wp-block-image.masonryer-item figcaption::before {
+                border-bottom-left-radius: <?php echo $radius; ?>;
+                border-bottom-right-radius: <?php echo $radius; ?>;
             }
 
-            .wp-block-image.masonryer-item:hover img {
-                transform: scale(1.05);
+            .wp-block-gallery.has-nested-images figure.wp-block-image:has(figcaption):before{
+                -webkit-backdrop-filter: blur(0) !important;
+                backdrop-filter: blur(0) !important;
             }
 
-            .wp-block-image.masonryer-item:hover figcaption {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            <?php endif; ?>
-
-            /* Responsive Behavior */
             @media (max-width: 1024px) {
                 .wp-block-gallery.masonryer-active {
                     grid-template-columns: repeat(calc(var(--gallery-columns, 3) - 1), 1fr) !important;
@@ -356,11 +301,9 @@ class GalleryMasonryer {
                 .wp-block-gallery.masonryer-active {
                     grid-template-columns: repeat(2, 1fr) !important;
                 }
-
                 .wp-block-image.masonryer-landscape {
                     grid-column: span 2;
                 }
-
                 .wp-block-image.masonryer-portrait {
                     grid-row: span 1;
                     aspect-ratio: 1 / 1;
@@ -372,7 +315,6 @@ class GalleryMasonryer {
                     grid-template-columns: 1fr !important;
                     gap: <?php echo $gap * 1.5; ?>px !important;
                 }
-
                 .wp-block-image.masonryer-landscape,
                 .wp-block-image.masonryer-portrait {
                     grid-column: span 1;
@@ -380,36 +322,6 @@ class GalleryMasonryer {
                     aspect-ratio: 16 / 9;
                 }
             }
-
-            /* Loading Animation */
-            .wp-block-gallery.masonryer-active:not(.masonryer-loaded) .wp-block-image {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-
-            .wp-block-gallery.masonryer-loaded .wp-block-image.masonryer-item {
-                animation: fadeInScale 0.6s ease forwards;
-            }
-
-            .wp-block-gallery.masonryer-loaded .wp-block-image.masonryer-item:nth-child(1) { animation-delay: 0.1s; }
-            .wp-block-gallery.masonryer-loaded .wp-block-image.masonryer-item:nth-child(2) { animation-delay: 0.15s; }
-            .wp-block-gallery.masonryer-loaded .wp-block-image.masonryer-item:nth-child(3) { animation-delay: 0.2s; }
-            .wp-block-gallery.masonryer-loaded .wp-block-image.masonryer-item:nth-child(4) { animation-delay: 0.25s; }
-            .wp-block-gallery.masonryer-loaded .wp-block-image.masonryer-item:nth-child(5) { animation-delay: 0.3s; }
-            .wp-block-gallery.masonryer-loaded .wp-block-image.masonryer-item:nth-child(6) { animation-delay: 0.35s; }
-
-            @keyframes fadeInScale {
-                from {
-                    opacity: 0;
-                    transform: scale(0.8);
-                }
-                to {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-            }
-
-            /* Links */
             .wp-block-image.masonryer-item a {
                 display: flex;
                 width: 100%;
@@ -419,5 +331,4 @@ class GalleryMasonryer {
         <?php
     }
 }
-
 new GalleryMasonryer();
