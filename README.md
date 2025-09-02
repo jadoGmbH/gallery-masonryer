@@ -10,4 +10,4 @@ Options (extra settings page)
  - activate Lightbox on all Images of gallery
  - colour of overlay when lightbox is activated
 
-
+Demo Website: https://masonryer.ja.do
