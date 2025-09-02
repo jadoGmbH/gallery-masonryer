@@ -1,4 +1,4 @@
-# gallery-masonryer
+# jado Gallery Masonryer Plugin for WordPress
 
 Turns every WordPress Gallery into an Masonry Grid (pure CSS) after activating the plugin
 
