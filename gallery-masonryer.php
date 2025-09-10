@@ -682,6 +682,12 @@ JS;
                 aspect-ratio: 1/1 !important;
             }
 
+
+            .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item,
+            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item {
+                border-radius: <?php echo $radius; ?>;
+            }
+
             /* Performance-optimiertes Bild-Styling */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item img,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item img {
@@ -689,7 +695,6 @@ JS;
                 height: 100% !important;
                 object-fit: cover !important;
                 display: block !important;
-                border-radius: <?php echo $radius; ?>;
                 max-width: none !important;
                 flex: none !important;
                 /* GPU-Beschleunigung für Bilder */
