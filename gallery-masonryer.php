@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name: Gallery Masonryer
- * Description: Erweitert Gutenberg Gallery Blocks mit Orientierungs-basierten Grid-Layouts.
- * Version: 1.3.1
+ * Plugin Name: Gallery Masonryer (Optimized)
+ * Description: Erweitert Gutenberg Gallery Blocks mit Orientierungs-basierten Grid-Layouts - Performance optimiert.
+ * Version: 1.3.2
  * Author: jado GmbH
  * Text Domain: gallery-masonryer
  * Domain Path: /languages
  */
 
-if (!defined('ABSPATH')) exit; // Direktzugriff verhindern
+if (!defined('ABSPATH')) exit;
 
 class GalleryMasonryer
 {
@@ -76,10 +76,8 @@ class GalleryMasonryer
 
     public function settings_page_html()
     {
-        // WordPress Color Picker einbinden
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
-
         ?>
         <div class="wrap">
             <h1><?php _e('Gallery Masonryer Einstellungen', 'gallery-masonryer'); ?></h1>
@@ -161,24 +159,23 @@ class GalleryMasonryer
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0073aa;">
-            <h3><?php _e('Hinweis:', 'gallery-masonryer'); ?></h3>
-            <p><strong><?php _e('Bildgrößen:', 'gallery-masonryer'); ?></strong></p>
-            <ul>
-                <li>
-                    <strong><?php _e('Landscape:', 'gallery-masonryer'); ?></strong> <?php _e('2x1 Verhältnis (nimmt 2 Spalten ein)', 'gallery-masonryer'); ?>
-                </li>
-                <li>
-                    <strong><?php _e('Portrait:', 'gallery-masonryer'); ?></strong> <?php _e('1x2 Verhältnis (nimmt 2 Zeilen ein)', 'gallery-masonryer'); ?>
-                </li>
-                <li>
-                    <strong><?php _e('Square:', 'gallery-masonryer'); ?></strong> <?php _e('1x1 Verhältnis', 'gallery-masonryer'); ?>
-                </li>
-            </ul>
-            <p><?php _e('Die Anzahl der Spalten wird aus den Gutenberg Gallery Block Einstellungen übernommen.', 'gallery-masonryer'); ?></p>
-        </div>
+            <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0073aa;">
+                <h3><?php _e('Hinweis:', 'gallery-masonryer'); ?></h3>
+                <p><strong><?php _e('Bildgrößen:', 'gallery-masonryer'); ?></strong></p>
+                <ul>
+                    <li>
+                        <strong><?php _e('Landscape:', 'gallery-masonryer'); ?></strong> <?php _e('2x1 Verhältnis (nimmt 2 Spalten ein)', 'gallery-masonryer'); ?>
+                    </li>
+                    <li>
+                        <strong><?php _e('Portrait:', 'gallery-masonryer'); ?></strong> <?php _e('1x2 Verhältnis (nimmt 2 Zeilen ein)', 'gallery-masonryer'); ?>
+                    </li>
+                    <li>
+                        <strong><?php _e('Square:', 'gallery-masonryer'); ?></strong> <?php _e('1x1 Verhältnis', 'gallery-masonryer'); ?>
+                    </li>
+                </ul>
+                <p><?php _e('Die Anzahl der Spalten wird aus den Gutenberg Gallery Block Einstellungen übernommen.', 'gallery-masonryer'); ?></p>
+            </div>
         </div>
 
         <script type="text/javascript">
@@ -199,26 +196,18 @@ class GalleryMasonryer
                     updatePreview();
                 });
 
-                // Live-Vorschau aktualisieren
                 function updatePreview() {
                     var color = $('#lightbox_background_color').val() || '#000000';
                     var opacity = $('#lightbox_background_opacity').val() / 100;
-
-                    // Hex zu RGB konvertieren
                     var r = parseInt(color.substr(1,2), 16);
                     var g = parseInt(color.substr(3,2), 16);
                     var b = parseInt(color.substr(5,2), 16);
-
                     var rgba = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
                     $('#preview-overlay').css('background-color', rgba);
-
-                    // Textfarbe anpassen für bessere Lesbarkeit
                     var brightness = (r * 299 + g * 587 + b * 114) / 1000;
                     var textColor = brightness > 128 ? '#333333' : '#ffffff';
                     $('#preview-overlay').css('color', textColor);
                 }
-
-                // Initiale Vorschau
                 updatePreview();
             });
         </script>
@@ -227,35 +216,26 @@ class GalleryMasonryer
 
     public function enqueue_assets()
     {
-        // Script registrieren und einbinden
         wp_register_script(
                 'gallery-masonryer',
-                '', // Inline Script
-                [], // Keine Abhängigkeiten
-                '1.3.1',
+                '',
+                [],
+                '1.3.2',
                 true
         );
         wp_enqueue_script('gallery-masonryer');
-
-        // CSS registrieren für Lightbox
         wp_register_style(
                 'gallery-masonryer-lightbox',
-                '', // Inline CSS
+                '',
                 [],
-                '1.3.1'
+                '1.3.2'
         );
         wp_enqueue_style('gallery-masonryer-lightbox');
-
-        // JavaScript Optionen bereitstellen
         $js_options = [
                 'enableLightbox' => get_option('enable_lightbox', false),
         ];
         wp_add_inline_script('gallery-masonryer', 'const GalleryMasonryerOptions = ' . wp_json_encode($js_options) . ';', 'before');
-
-        // Hauptscript hinzufügen
         wp_add_inline_script('gallery-masonryer', $this->get_script());
-
-        // Lightbox CSS einbinden wenn aktiviert
         if (get_option('enable_lightbox', false)) {
             wp_add_inline_style('gallery-masonryer-lightbox', $this->get_lightbox_styles());
         }
@@ -265,21 +245,16 @@ class GalleryMasonryer
     {
         $color = get_option('lightbox_background_color', '#000000');
         $opacity = get_option('lightbox_background_opacity', 90) / 100;
-
-        // Hex zu RGB konvertieren
         $color = str_replace('#', '', $color);
         $r = hexdec(substr($color, 0, 2));
         $g = hexdec(substr($color, 2, 2));
         $b = hexdec(substr($color, 4, 2));
-
         return "rgba({$r}, {$g}, {$b}, {$opacity})";
     }
 
     private function get_lightbox_styles()
     {
         $background_color = $this->get_lightbox_background_style();
-
-        // Textfarbe basierend auf Hintergrundfarbe berechnen
         $color = get_option('lightbox_background_color', '#000000');
         $color = str_replace('#', '', $color);
         $r = hexdec(substr($color, 0, 2));
@@ -287,7 +262,6 @@ class GalleryMasonryer
         $b = hexdec(substr($color, 4, 2));
         $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
         $text_color = $brightness > 128 ? '#333333' : '#ffffff';
-
         return <<<CSS
 /* Simple Lightbox Styles */
 .simple-lightbox {
@@ -381,11 +355,11 @@ height: 2rem;
 }
 
 .masonryer-item.lightbox-enabled img {
-    transition: transform 0.2s ease !important;
+    transition: transform 0.15s ease-out !important;
 }
 
 .masonryer-item.lightbox-enabled img:hover {
-    transform: scale(1.02) !important;
+    transform: translateZ(0) scale(1.02) !important;
 }
 CSS;
     }
@@ -394,311 +368,242 @@ CSS;
     {
         return <<<JS
 (function(){
-    console.log('Gallery Masonryer Script gestartet');
-    
     let lightboxImages = [];
     let currentIndex = 0;
     let lightboxElement = null;
+    let isInitialized = false;
     
-    // Warten bis DOM bereit ist
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initGalleryMasonryer);
-    } else {
-        initGalleryMasonryer();
-    }
-
-    function initGalleryMasonryer() {
-        console.log('Gallery Masonryer initialisiert');
-        const galleries = document.querySelectorAll('.wp-block-gallery');
-        console.log('Gefundene Galerien:', galleries.length);
+    // Performance-optimierte Initialisierung
+    const initGalleryMasonryer = () => {
+        if (isInitialized) return;
         
-        if (galleries.length === 0) {
-            console.log('Keine Galerien gefunden');
-            return;
-        }
+        const galleries = document.querySelectorAll('.wp-block-gallery:not(.masonryer-processed)');
+        if (galleries.length === 0) return;
 
-        galleries.forEach((gallery, index) => {
-            console.log('Verarbeite Galerie', index + 1);
+        // Batch-Verarbeitung für bessere Performance
+        galleries.forEach((gallery) => {
+            gallery.classList.add('masonryer-processed');
             const columns = extractColumnsFromGallery(gallery);
             gallery.style.setProperty('--gallery-columns', columns);
             gallery.classList.add('masonryer-active');
+            
+            // Intersection Observer für Lazy Loading der Orientierungsberechnung
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        processGalleryImages(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '50px' });
+            
+            observer.observe(gallery);
+        });
 
-            const images = gallery.querySelectorAll('.wp-block-image img, figure.wp-block-image img');
-            console.log('Gefundene Bilder in Galerie ' + (index + 1) + ':', images.length);
+        if (typeof GalleryMasonryerOptions !== 'undefined' && GalleryMasonryerOptions.enableLightbox) {
+            initSimpleLightbox();
+        }
+        
+        isInitialized = true;
+    };
 
-            images.forEach((img, imgIndex) => {
-                console.log('Verarbeite Bild', imgIndex + 1, ':', img.src);
-                
+    const processGalleryImages = (gallery) => {
+        const images = gallery.querySelectorAll('.wp-block-image img, figure.wp-block-image img');
+        
+        // Verwende requestAnimationFrame für bessere Performance
+        const processImages = () => {
+            images.forEach((img) => {
                 if (img.complete && img.naturalHeight !== 0) {
                     setImageOrientation(img);
                 } else {
-                    img.addEventListener('load', () => {
-                        setImageOrientation(img);
-                    });
-                    img.addEventListener('error', () => {
-                        console.log('Fehler beim Laden des Bildes:', img.src);
-                    });
+                    img.addEventListener('load', () => setImageOrientation(img), { once: true });
                 }
             });
-        });
+        };
         
-        // Lightbox initialisieren wenn aktiviert
-        console.log('Lightbox aktiviert:', GalleryMasonryerOptions.enableLightbox);
-        if (GalleryMasonryerOptions.enableLightbox) {
-            initSimpleLightbox();
-        }
-    }
+        requestAnimationFrame(processImages);
+    };
 
-    function extractColumnsFromGallery(gallery) {
-        // Erste Priorität: CSS-Klasse
+    const extractColumnsFromGallery = (gallery) => {
         const classList = Array.from(gallery.classList);
         const columnClass = classList.find(cls => cls.startsWith('columns-'));
         if (columnClass) {
             const num = parseInt(columnClass.replace('columns-', ''));
-            if (num && num > 0) {
-                console.log('Spalten aus CSS-Klasse:', num);
-                return num;
-            }
+            if (num && num > 0) return num;
         }
         
-        // Zweite Priorität: data-columns Attribut
         const dataColumns = gallery.getAttribute('data-columns');
         if (dataColumns) {
             const num = parseInt(dataColumns);
-            if (num && num > 0) {
-                console.log('Spalten aus data-Attribut:', num);
-                return num;
-            }
+            if (num && num > 0) return num;
         }
-        
-        // Standard: 3 Spalten
-        console.log('Verwende Standard-Spalten: 3');
         return 3;
-    }
+    };
 
-    function setImageOrientation(img) {
+    const setImageOrientation = (img) => {
         const parent = img.closest('.wp-block-image') || img.closest('figure.wp-block-image');
-        if (!parent) {
-            console.log('Kein parent Element gefunden für Bild:', img.src);
-            return;
-        }
+        if (!parent || parent.classList.contains('masonryer-processed')) return;
 
         const { naturalWidth: w, naturalHeight: h } = img;
-        if (w === 0 || h === 0) {
-            console.log('Bild noch nicht geladen oder ungültige Dimensionen:', img.src);
-            return;
-        }
+        if (w === 0 || h === 0) return;
 
         const ratio = w / h;
-        console.log('Bild-Verhältnis für', img.src, ':', ratio);
-
-        // Orientierung bestimmen und Klassen setzen
-        parent.classList.remove('masonryer-landscape', 'masonryer-portrait', 'masonryer-square');
+        
+        // Batch DOM-Updates
+        const classesToRemove = ['masonryer-landscape', 'masonryer-portrait', 'masonryer-square'];
+        parent.classList.remove(...classesToRemove);
         
         if (ratio > 1.2) {
             parent.classList.add('masonryer-landscape');
-            console.log('Bild als Landscape klassifiziert');
         } else if (ratio < 0.8) {
             parent.classList.add('masonryer-portrait');
-            console.log('Bild als Portrait klassifiziert');
         } else {
             parent.classList.add('masonryer-square');
-            console.log('Bild als Square klassifiziert');
         }
-
-        parent.classList.add('masonryer-item');
-
-        // Lightbox-Funktionalität hinzufügen
+        
+        parent.classList.add('masonryer-item', 'masonryer-processed');
+        
         if (typeof GalleryMasonryerOptions !== 'undefined' && GalleryMasonryerOptions.enableLightbox) {
-            console.log('Füge Lightbox-Funktionalität zu Bild hinzu');
             parent.classList.add('lightbox-enabled');
-            
-            // Click Event hinzufügen
             img.style.cursor = 'pointer';
             img.addEventListener('click', function(e) {
-                console.log('Bild geklickt:', img.src);
                 e.preventDefault();
                 e.stopPropagation();
                 openLightbox(img);
-            });
-            
-            console.log('Click-Event für Lightbox hinzugefügt');
+            }, { passive: false });
         }
-    }
+    };
 
-    function initSimpleLightbox() {
-        console.log('Initialisiere Simple Lightbox');
+    const initSimpleLightbox = () => {
+        if (document.querySelector('.simple-lightbox')) return;
         
-        // Prüfe ob bereits vorhanden
-        if (document.querySelector('.simple-lightbox')) {
-            console.log('Lightbox bereits vorhanden');
-            return;
-        }
-        
-        // Lightbox HTML erstellen
         lightboxElement = document.createElement('div');
         lightboxElement.className = 'simple-lightbox';
-        lightboxElement.innerHTML = `
-            <button class="close"><svg width="100%" height="100%" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g transform="matrix(1,0,0,1,0.708,0.707)">
-        <g id="if_misc-_close__1276877_3_">
-            <path d="M4.293,5L-0.354,0.354C-0.549,0.158 -0.549,-0.158 -0.354,-0.354C-0.158,-0.549 0.158,-0.549 0.354,-0.354L5,4.293L9.646,-0.354C9.842,-0.549 10.158,-0.549 10.354,-0.354C10.549,-0.158 10.549,0.158 10.354,0.354L5.707,5L10.354,9.646C10.549,9.842 10.549,10.158 10.354,10.354C10.158,10.549 9.842,10.549 9.646,10.354L5,5.707L0.354,10.354C0.158,10.549 -0.158,10.549 -0.354,10.354C-0.549,10.158 -0.549,9.842 -0.354,9.646L4.293,5Z" style="fill:white;"/>
-        </g>
-    </g>
-</svg></button>
-            <button class="nav prev"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g transform="matrix(1,0,0,1,4,0)">
-        <path d="M10.477,0.477C10.741,0.741 10.741,1.168 10.477,1.432L1.909,10L10.477,18.568C10.741,18.832 10.741,19.259 10.477,19.523C10.214,19.786 9.786,19.786 9.523,19.523L0.707,10.707C0.317,10.317 0.317,9.683 0.707,9.293L9.523,0.477C9.786,0.214 10.214,0.214 10.477,0.477Z" style="fill:white;fill-rule:nonzero;"/>
-    </g>
-</svg></button>
-            <button class="nav next"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g transform="matrix(1,0,0,1,4,0)">
-        <path d="M1.377,19.523C1.114,19.259 1.114,18.832 1.377,18.568L9.945,10L1.377,1.432C1.114,1.168 1.114,0.741 1.377,0.477C1.641,0.214 2.068,0.214 2.332,0.477L11.147,9.293C11.538,9.683 11.538,10.317 11.147,10.707L2.332,19.523C2.068,19.786 1.641,19.786 1.377,19.523Z" style="fill:white;fill-rule:nonzero;"/>
-    </g>
-</svg></button>
-            <img src="" alt="">
-        `;
-        
+        lightboxElement.innerHTML = '<button class="close"><svg width="100%" height="100%" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,0.708,0.707)"><g id="if_misc-_close__1276877_3_"><path d="M4.293,5L-0.354,0.354C-0.549,0.158 -0.549,-0.158 -0.354,-0.354C-0.158,-0.549 0.158,-0.549 0.354,-0.354L5,4.293L9.646,-0.354C9.842,-0.549 10.158,-0.549 10.354,-0.354C10.549,-0.158 10.549,0.158 10.354,0.354L5.707,5L10.354,9.646C10.549,9.842 10.549,10.158 10.354,10.354C10.158,10.549 9.842,10.549 9.646,10.354L5,5.707L0.354,10.354C0.158,10.549 -0.158,10.549 -0.354,10.354C-0.549,10.158 -0.549,9.842 -0.354,9.646L4.293,5Z" style="fill:white;"/></g></g></svg></button><button class="nav prev"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,4,0)"><path d="M10.477,0.477C10.741,0.741 10.741,1.168 10.477,1.432L1.909,10L10.477,18.568C10.741,18.832 10.741,19.259 10.477,19.523C10.214,19.786 9.786,19.786 9.523,19.523L0.707,10.707C0.317,10.317 0.317,9.683 0.707,9.293L9.523,0.477C9.786,0.214 10.214,0.214 10.477,0.477Z" style="fill:white;fill-rule:nonzero;"/></g></svg></button><button class="nav next"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,4,0)"><path d="M1.377,19.523C1.114,19.259 1.114,18.832 1.377,18.568L9.945,10L1.377,1.432C1.114,1.168 1.114,0.741 1.377,0.477C1.641,0.214 2.068,0.214 2.332,0.477L11.147,9.293C11.538,9.683 11.538,10.317 11.147,10.707L2.332,19.523C2.068,19.786 1.641,19.786 1.377,19.523Z" style="fill:white;fill-rule:nonzero;"/></g></svg></button><img src="" alt="">';
         document.body.appendChild(lightboxElement);
-        console.log('Lightbox HTML hinzugefügt');
         
-        // Event Listeners
+        // Event Listeners mit passiven Events für bessere Performance
         lightboxElement.querySelector('.close').addEventListener('click', closeLightbox);
         lightboxElement.querySelector('.prev').addEventListener('click', prevImage);
         lightboxElement.querySelector('.next').addEventListener('click', nextImage);
-        
-        // Klick außerhalb des Bildes schließt Lightbox
         lightboxElement.addEventListener('click', (e) => {
-            if (e.target === lightboxElement) {
-                closeLightbox();
-            }
+            if (e.target === lightboxElement) closeLightbox();
         });
         
-        // Tastatur-Navigation
         document.addEventListener('keydown', (e) => {
             if (lightboxElement && lightboxElement.classList.contains('active')) {
                 switch(e.key) {
-                    case 'Escape':
-                        closeLightbox();
-                        break;
-                    case 'ArrowLeft':
-                        prevImage();
-                        break;
-                    case 'ArrowRight':
-                        nextImage();
-                        break;
+                    case 'Escape': closeLightbox(); break;
+                    case 'ArrowLeft': prevImage(); break;
+                    case 'ArrowRight': nextImage(); break;
                 }
             }
-        });
-        
-        console.log('Simple Lightbox erfolgreich initialisiert');
-    }
+        }, { passive: true });
+    };
 
-    function openLightbox(img) {
-        console.log('Öffne Lightbox für:', img.src);
+    const openLightbox = (img) => {
+        if (!lightboxElement) return;
         
-        if (!lightboxElement) {
-            console.error('Lightbox Element nicht gefunden!');
-            return;
-        }
-        
-        // Alle Bilder der aktuellen Galerie sammeln
         const gallery = img.closest('.wp-block-gallery');
-        if (!gallery) {
-            console.error('Galerie für Bild nicht gefunden');
-            return;
-        }
+        if (!gallery) return;
         
         lightboxImages = Array.from(gallery.querySelectorAll('.masonryer-item img'));
         currentIndex = lightboxImages.indexOf(img);
-        
-        console.log('Lightbox Images:', lightboxImages.length, 'Current Index:', currentIndex);
-        
-        // Lightbox anzeigen
         showImageInLightbox(currentIndex);
         lightboxElement.classList.add('active');
         document.body.style.overflow = 'hidden';
-        
-        console.log('Lightbox geöffnet für Bild', currentIndex + 1, 'von', lightboxImages.length);
-    }
+    };
 
-    function showImageInLightbox(index) {
-        console.log('Zeige Bild in Lightbox:', index);
-        
+    const showImageInLightbox = (index) => {
         const img = lightboxImages[index];
         const lightboxImg = lightboxElement.querySelector('img');
-        
-        // Größte Version aus srcset extrahieren
         const fullSize = getFullSizeFromSrcset(img);
-        console.log('Verwende Vollbild-URL:', fullSize);
-        
         lightboxImg.src = fullSize;
         lightboxImg.alt = img.alt || '';
         
-        // Navigation-Buttons ein/ausblenden
         const prevBtn = lightboxElement.querySelector('.prev');
         const nextBtn = lightboxElement.querySelector('.next');
-        
         prevBtn.style.display = index > 0 ? 'block' : 'none';
         nextBtn.style.display = index < lightboxImages.length - 1 ? 'block' : 'none';
-    }
+    };
 
-    function closeLightbox() {
-        console.log('Schließe Lightbox');
+    const closeLightbox = () => {
         if (lightboxElement) {
             lightboxElement.classList.remove('active');
             document.body.style.overflow = '';
         }
-    }
+    };
 
-    function prevImage() {
+    const prevImage = () => {
         if (currentIndex > 0) {
             currentIndex--;
             showImageInLightbox(currentIndex);
-            console.log('Vorheriges Bild:', currentIndex);
         }
-    }
+    };
 
-    function nextImage() {
+    const nextImage = () => {
         if (currentIndex < lightboxImages.length - 1) {
             currentIndex++;
             showImageInLightbox(currentIndex);
-            console.log('Nächstes Bild:', currentIndex);
         }
-    }
+    };
 
-    // Hilfsfunktion: Größte Bildversion aus srcset extrahieren
-    function getFullSizeFromSrcset(img) {
+    const getFullSizeFromSrcset = (img) => {
         const srcset = img.getAttribute('srcset');
-        if (!srcset) {
-            console.log('Kein srcset gefunden, verwende src:', img.src);
-            return img.src;
-        }
-
-        // Srcset parsen und größte Version finden
+        if (!srcset) return img.src;
+        
         const sources = srcset.split(',').map(source => {
             const parts = source.trim().split(' ');
             const url = parts[0];
             const width = parseInt(parts[1]) || 0;
             return { url, width };
         });
-
-        // Nach Breite sortieren und größte nehmen
-        sources.sort((a, b) => b.width - a.width);
         
-        const fullSize = sources[0] ? sources[0].url : img.src;
-        console.log('Extrahierte Vollbild-URL aus srcset:', fullSize);
-        return fullSize;
+        sources.sort((a, b) => b.width - a.width);
+        return sources[0] ? sources[0].url : img.src;
+    };
+
+    // Optimierte Event-Handler
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initGalleryMasonryer);
+    } else {
+        initGalleryMasonryer();
     }
 
-    // Responsive Neuinitialisierung
-    let resizeTimer;
+    // Throttled Resize Handler
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            console.log('Fenster-Resize: Gallery neu initialisiert');
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            isInitialized = false;
             initGalleryMasonryer();
-        }, 300);
+        }, 250);
+    }, { passive: true });
+
+    // MutationObserver für dynamisch hinzugefügte Inhalte
+    const observer = new MutationObserver((mutations) => {
+        let shouldReinit = false;
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && (node.classList?.contains('wp-block-gallery') || node.querySelector?.('.wp-block-gallery'))) {
+                        shouldReinit = true;
+                    }
+                });
+            }
+        });
+        
+        if (shouldReinit) {
+            requestAnimationFrame(() => {
+                isInitialized = false;
+                initGalleryMasonryer();
+            });
+        }
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
     });
 })();
 JS;
@@ -712,7 +617,7 @@ JS;
 
         ?>
         <style>
-            /* Basis Gallery Layout */
+            /* Performance-optimierte Basis Gallery Layout */
             .wp-block-gallery.masonryer-active.has-nested-images,
             .wp-block-gallery.masonryer-active.is-layout-flex,
             .wp-block-gallery.masonryer-active {
@@ -722,22 +627,20 @@ JS;
                 gap: <?php echo $gap; ?>px !important;
                 grid-auto-flow: <?php echo $random_placement; ?> !important;
                 position: relative;
-                grid-auto-rows: calc((100vw - <?php echo $gap * 4; ?>px) / var(--gallery-columns, 3)) !important;
+                /* Statische Höhe für bessere Performance */
+                grid-auto-rows: minmax(200px, auto) !important;
                 flex-direction: unset !important;
                 flex-wrap: unset !important;
                 align-items: unset !important;
                 justify-content: unset !important;
+                /* GPU-Beschleunigung aktivieren */
+                transform: translateZ(0);
+                will-change: auto;
+                /* Bessere Scroll-Performance */
+                contain: layout style;
             }
 
-            /* Container Query Support für moderne Browser */
-            @supports (container-type: inline-size) {
-                .wp-block-gallery.masonryer-active {
-                    container-type: inline-size;
-                    grid-auto-rows: calc((100cqw - <?php echo $gap * 2; ?>px) / var(--gallery-columns, 3)) !important;
-                }
-            }
-
-            /* Basis Bild-Item Styling */
+            /* Performance-optimierte Bild-Item Styling */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item {
                 margin: 0 !important;
@@ -749,31 +652,39 @@ JS;
                 width: auto !important;
                 max-width: none !important;
                 min-width: 0 !important;
+                /* GPU-Beschleunigung für Bild-Container */
+                transform: translateZ(0);
+                backface-visibility: hidden;
+                /* Bessere Performance bei Animationen */
+                will-change: transform;
             }
 
             /* Landscape Bilder (breiter als hoch) */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-landscape {
                 grid-column: span 2 !important;
-                aspect-ratio: unset !important;
+                /* Feste Aspect Ratio für bessere Performance */
+                aspect-ratio: 2/1 !important;
             }
 
             /* Portrait Bilder (höher als breit) */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-portrait {
                 grid-row: span 2 !important;
-                aspect-ratio: unset !important;
+                /* Feste Aspect Ratio für bessere Performance */
+                aspect-ratio: 1/2 !important;
             }
 
             /* Quadratische Bilder */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-square {
-                aspect-ratio: unset !important;
+                /* Feste Aspect Ratio für bessere Performance */
+                aspect-ratio: 1/1 !important;
             }
 
-            /* Bild-Styling */
+            /* Performance-optimiertes Bild-Styling */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item img,
-            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item img, .masonryer-item.lightbox-enabled {
+            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item img {
                 width: 100% !important;
                 height: 100% !important;
                 object-fit: cover !important;
@@ -781,9 +692,66 @@ JS;
                 border-radius: <?php echo $radius; ?>;
                 max-width: none !important;
                 flex: none !important;
+                /* GPU-Beschleunigung für Bilder */
+                transform: translateZ(0);
+                backface-visibility: hidden;
+                /* Smooth Rendering */
+                image-rendering: optimizeQuality;
+                /* Verhindert Layout-Shifts */
+                contain: layout style paint;
             }
 
-            /* Bildunterschriften */
+            /* Lightbox-enabled Bilder */
+            .masonryer-item.lightbox-enabled img {
+                cursor: pointer;
+                transition: transform 0.15s ease-out !important;
+            }
+
+            .masonryer-item.lightbox-enabled img:hover {
+                transform: translateZ(0) scale(1.02) !important;
+            }
+
+            /* Performance-optimierte Responsive Breakpoints */
+            @media (max-width: 1024px) {
+                .wp-block-gallery.masonryer-active {
+                    grid-template-columns: repeat(calc(var(--gallery-columns, 3) - 1), 1fr) !important;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .wp-block-gallery.masonryer-active {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    grid-auto-rows: minmax(150px, auto) !important;
+                }
+
+                .wp-block-image.masonryer-landscape {
+                    grid-column: span 2;
+                    aspect-ratio: 2/1 !important;
+                }
+
+                .wp-block-image.masonryer-portrait {
+                    grid-row: span 1;
+                    aspect-ratio: 1/1 !important;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .wp-block-gallery.masonryer-active {
+                    grid-template-columns: 1fr !important;
+                    gap: <?php echo $gap * 1.5; ?>px !important;
+                    grid-auto-rows: minmax(200px, auto) !important;
+                }
+
+                .wp-block-image.masonryer-landscape,
+                .wp-block-image.masonryer-portrait,
+                .wp-block-image.masonryer-square {
+                    grid-column: span 1 !important;
+                    grid-row: span 1 !important;
+                    aspect-ratio: 16/9 !important;
+                }
+            }
+
+            /* Performance-optimierte Bildunterschriften */
             .wp-block-image.masonryer-item figcaption {
                 position: absolute;
                 bottom: 0;
@@ -796,6 +764,9 @@ JS;
                 font-size: 14px;
                 border-bottom-left-radius: <?php echo $radius; ?>;
                 border-bottom-right-radius: <?php echo $radius; ?>;
+                /* Performance-Optimierung für Overlays */
+                transform: translateZ(0);
+                will-change: auto;
             }
 
             /* Backdrop Filter für Bildunterschriften */
@@ -804,42 +775,6 @@ JS;
                 backdrop-filter: blur(0) !important;
                 border-bottom-left-radius: <?php echo $radius; ?>;
                 border-bottom-right-radius: <?php echo $radius; ?>;
-            }
-
-            /* Responsive Breakpoints */
-            @media (max-width: 1024px) {
-                .wp-block-gallery.masonryer-active {
-                    grid-template-columns: repeat(calc(var(--gallery-columns, 3) - 1), 1fr) !important;
-                }
-            }
-
-            @media (max-width: 768px) {
-                .wp-block-gallery.masonryer-active {
-                    grid-template-columns: repeat(2, 1fr) !important;
-                }
-
-                .wp-block-image.masonryer-landscape {
-                    grid-column: span 2;
-                }
-
-                .wp-block-image.masonryer-portrait {
-                    grid-row: span 1;
-                    aspect-ratio: 1 / 1;
-                }
-            }
-
-            @media (max-width: 480px) {
-                .wp-block-gallery.masonryer-active {
-                    grid-template-columns: 1fr !important;
-                    gap: <?php echo $gap * 1.5; ?>px !important;
-                }
-
-                .wp-block-image.masonryer-landscape,
-                .wp-block-image.masonryer-portrait {
-                    grid-column: span 1;
-                    grid-row: span 1;
-                    aspect-ratio: 16 / 9;
-                }
             }
         </style>
         <?php
