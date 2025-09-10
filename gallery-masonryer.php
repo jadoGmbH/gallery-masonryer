@@ -480,6 +480,7 @@ CSS;
         lightboxElement = document.createElement('div');
         lightboxElement.className = 'simple-lightbox';
         lightboxElement.innerHTML = '<button class="close"><svg width="100%" height="100%" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,0.708,0.707)"><g id="if_misc-_close__1276877_3_"><path d="M4.293,5L-0.354,0.354C-0.549,0.158 -0.549,-0.158 -0.354,-0.354C-0.158,-0.549 0.158,-0.549 0.354,-0.354L5,4.293L9.646,-0.354C9.842,-0.549 10.158,-0.549 10.354,-0.354C10.549,-0.158 10.549,0.158 10.354,0.354L5.707,5L10.354,9.646C10.549,9.842 10.549,10.158 10.354,10.354C10.158,10.549 9.842,10.549 9.646,10.354L5,5.707L0.354,10.354C0.158,10.549 -0.158,10.549 -0.354,10.354C-0.549,10.158 -0.549,9.842 -0.354,9.646L4.293,5Z" style="fill:white;"/></g></g></svg></button><button class="nav prev"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,4,0)"><path d="M10.477,0.477C10.741,0.741 10.741,1.168 10.477,1.432L1.909,10L10.477,18.568C10.741,18.832 10.741,19.259 10.477,19.523C10.214,19.786 9.786,19.786 9.523,19.523L0.707,10.707C0.317,10.317 0.317,9.683 0.707,9.293L9.523,0.477C9.786,0.214 10.214,0.214 10.477,0.477Z" style="fill:white;fill-rule:nonzero;"/></g></svg></button><button class="nav next"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,4,0)"><path d="M1.377,19.523C1.114,19.259 1.114,18.832 1.377,18.568L9.945,10L1.377,1.432C1.114,1.168 1.114,0.741 1.377,0.477C1.641,0.214 2.068,0.214 2.332,0.477L11.147,9.293C11.538,9.683 11.538,10.317 11.147,10.707L2.332,19.523C2.068,19.786 1.641,19.786 1.377,19.523Z" style="fill:white;fill-rule:nonzero;"/></g></svg></button><img src="" alt="">';
+        
         document.body.appendChild(lightboxElement);
         
         // Event Listeners mit passiven Events für bessere Performance
@@ -628,7 +629,7 @@ JS;
                 grid-auto-flow: <?php echo $random_placement; ?> !important;
                 position: relative;
                 /* Statische Höhe für bessere Performance */
-                grid-auto-rows: minmax(200px, auto) !important;
+                grid-auto-rows: auto !important;
                 flex-direction: unset !important;
                 flex-wrap: unset !important;
                 align-items: unset !important;
@@ -670,7 +671,6 @@ JS;
             /* Portrait Bilder (höher als breit) */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-portrait {
-                grid-row: span 2 !important;
                 /* Feste Aspect Ratio für bessere Performance */
                 aspect-ratio: 1/2 !important;
             }
@@ -680,11 +680,12 @@ JS;
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-square {
                 /* Feste Aspect Ratio für bessere Performance */
                 aspect-ratio: 1/1 !important;
+                box-sizing: border-box !important;
             }
 
-
+            /* Performance-optimiertes Bild-Styling */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item,
-            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item {
+            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item  {
                 border-radius: <?php echo $radius; ?>;
             }
 
@@ -706,6 +707,10 @@ JS;
                 contain: layout style paint;
             }
 
+            .wp-block-gallery.masonryer-active{
+                grid-auto-rows: calc((100% - (var(--gallery-columns, 3) - 1) * <?php echo $gap; ?>px) / var(--gallery-columns));
+            }
+
             /* Lightbox-enabled Bilder */
             .masonryer-item.lightbox-enabled img {
                 cursor: pointer;
@@ -723,36 +728,124 @@ JS;
                 }
             }
 
+
+            .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
+                grid-row: span 1 !important;
+            }
+
+            .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
+                grid-column: span 2 !important;
+                grid-row: span 1 !important;
+            }
+
+            .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
+                grid-column: span 1 !important;
+                grid-row: span 2 !important;
+            }
+
+
+            /* Tablet */
             @media (max-width: 768px) {
                 .wp-block-gallery.masonryer-active {
                     grid-template-columns: repeat(2, 1fr) !important;
-                    grid-auto-rows: minmax(150px, auto) !important;
+                    grid-auto-rows: auto !important; /* Kein Mindestwert erzwingen */
                 }
 
-                .wp-block-image.masonryer-landscape {
-                    grid-column: span 2;
-                    aspect-ratio: 2/1 !important;
+                /* Quadratisch (1/1) */
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
+                    aspect-ratio: 1 / 1 !important;
+                    grid-column: span 1 !important;
+                    grid-row: span 1 !important;
                 }
 
-                .wp-block-image.masonryer-portrait {
-                    grid-row: span 1;
-                    aspect-ratio: 1/1 !important;
+                /* Querformat (2/1) */
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
+                    aspect-ratio: 2 / 1 !important;
+                    grid-column: span 2 !important; /* Über beide Spalten */
+                    grid-row: span 1 !important;
+                }
+
+                /* Hochformat (1/2) */
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
+                    aspect-ratio: 1 / 2 !important;
+                    grid-column: span 1 !important;
                 }
             }
 
+
+
+            /* Handy */
             @media (max-width: 480px) {
                 .wp-block-gallery.masonryer-active {
                     grid-template-columns: 1fr !important;
-                    gap: <?php echo $gap * 1.5; ?>px !important;
-                    grid-auto-rows: minmax(200px, auto) !important;
+                    gap: <?php echo $gap; ?>px !important;
+                    grid-auto-rows: auto !important;
+                    grid-auto-flow: dense !important;
                 }
 
-                .wp-block-image.masonryer-landscape,
-                .wp-block-image.masonryer-portrait,
-                .wp-block-image.masonryer-square {
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
+                    width: 100% !important;
+                    aspect-ratio: 1 / 1 !important;
+                    grid-column: span 1 !important;
+                    grid-row: auto !important;
+                }
+
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
+                    aspect-ratio: 2 / 1 !important;
+                    grid-column: span 1 !important;
+                    grid-row: auto !important;
+                }
+
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
+                    aspect-ratio: 1 / 2 !important;
+                    grid-column: span 1 !important;
+                    grid-row: auto !important;
+                }
+            }
+
+            /* Mobile View: Explizite Überschreibung aller Desktop-Regeln */
+            @media (max-width: 480px) {
+                .wp-block-gallery.masonryer-active {
+                    grid-template-columns: 1fr !important;
+                    gap: <?php echo $gap; ?>px !important;
+                    grid-auto-rows: auto !important;
+                    grid-auto-flow: dense !important; /* sorgt für kompaktes Füllen */
+                }
+
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
+                    aspect-ratio: 1 / 1 !important;
+                    grid-column: span 1 !important;
+                    grid-row: auto !important; /* KEIN span */
+                }
+
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
+                    aspect-ratio: 2 / 1 !important;
+                    grid-column: span 1 !important;
+                    grid-row: auto !important; /* KEIN span */
+                }
+
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
+                    aspect-ratio: 1 / 2 !important;
+                    grid-column: span 1 !important;
+                    grid-row: auto !important; /* KEIN span */
+                }
+            }
+
+            /* Sehr kleine Screens: Fallback auf 1 Spalte */
+            @media (max-width: 320px) {
+                .wp-block-gallery.masonryer-active {
+                    grid-template-columns: 1fr !important;
+                }
+
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape,
+                .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-landscape,
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait,
+                .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-portrait,
+                .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square,
+                .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-square {
                     grid-column: span 1 !important;
                     grid-row: span 1 !important;
-                    aspect-ratio: 16/9 !important;
+                    aspect-ratio: 4/3 !important;
                 }
             }
 
