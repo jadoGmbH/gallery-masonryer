@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gallery Masonryer (Optimized)
  * Description: Erweitert Gutenberg Gallery Blocks mit Orientierungs-basierten Grid-Layouts - Performance optimiert.
- * Version: 1.3.2
+ * Version: 1.3.3
  * Author: jado GmbH
  * Text Domain: gallery-masonryer
  * Domain Path: /languages
@@ -180,7 +180,6 @@ class GalleryMasonryer
 
         <script type="text/javascript">
             jQuery(document).ready(function($) {
-                // WordPress Color Picker initialisieren
                 $('.color-picker').wpColorPicker({
                     change: function(event, ui) {
                         updatePreview();
@@ -189,13 +188,10 @@ class GalleryMasonryer
                         updatePreview();
                     }
                 });
-
-                // Opacity Slider Handler
                 $('#lightbox_background_opacity').on('input', function() {
                     $('#opacity-value').text($(this).val() + '%');
                     updatePreview();
                 });
-
                 function updatePreview() {
                     var color = $('#lightbox_background_color').val() || '#000000';
                     var opacity = $('#lightbox_background_opacity').val() / 100;
@@ -618,7 +614,6 @@ JS;
 
         ?>
         <style>
-            /* Performance-optimierte Basis Gallery Layout */
             .wp-block-gallery.masonryer-active.has-nested-images,
             .wp-block-gallery.masonryer-active.is-layout-flex,
             .wp-block-gallery.masonryer-active {
@@ -628,20 +623,16 @@ JS;
                 gap: <?php echo $gap; ?>px !important;
                 grid-auto-flow: <?php echo $random_placement; ?> !important;
                 position: relative;
-                /* Statische Höhe für bessere Performance */
                 grid-auto-rows: auto !important;
                 flex-direction: unset !important;
                 flex-wrap: unset !important;
                 align-items: unset !important;
                 justify-content: unset !important;
-                /* GPU-Beschleunigung aktivieren */
                 transform: translateZ(0);
                 will-change: auto;
-                /* Bessere Scroll-Performance */
                 contain: layout style;
             }
 
-            /* Performance-optimierte Bild-Item Styling */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item {
                 margin: 0 !important;
@@ -653,43 +644,26 @@ JS;
                 width: auto !important;
                 max-width: none !important;
                 min-width: 0 !important;
-                /* GPU-Beschleunigung für Bild-Container */
                 transform: translateZ(0);
                 backface-visibility: hidden;
-                /* Bessere Performance bei Animationen */
                 will-change: transform;
             }
 
-            /* Landscape Bilder (breiter als hoch) */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-landscape {
                 grid-column: span 2 !important;
-                /* Feste Aspect Ratio für bessere Performance */
-                aspect-ratio: 2/1 !important;
             }
 
-            /* Portrait Bilder (höher als breit) */
-            .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait,
-            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-portrait {
-                /* Feste Aspect Ratio für bessere Performance */
-                aspect-ratio: 1/2 !important;
-            }
-
-            /* Quadratische Bilder */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-square {
-                /* Feste Aspect Ratio für bessere Performance */
-                aspect-ratio: 1/1 !important;
                 box-sizing: border-box !important;
             }
-
-            /* Performance-optimiertes Bild-Styling */
+            
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item  {
                 border-radius: <?php echo $radius; ?>;
             }
 
-            /* Performance-optimiertes Bild-Styling */
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item img,
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item img {
                 width: 100% !important;
@@ -698,12 +672,9 @@ JS;
                 display: block !important;
                 max-width: none !important;
                 flex: none !important;
-                /* GPU-Beschleunigung für Bilder */
                 transform: translateZ(0);
                 backface-visibility: hidden;
-                /* Smooth Rendering */
                 image-rendering: optimizeQuality;
-                /* Verhindert Layout-Shifts */
                 contain: layout style paint;
             }
 
@@ -748,26 +719,20 @@ JS;
             @media (max-width: 768px) {
                 .wp-block-gallery.masonryer-active {
                     grid-template-columns: repeat(2, 1fr) !important;
-                    grid-auto-rows: auto !important; /* Kein Mindestwert erzwingen */
+                    grid-auto-rows: auto !important;
                 }
 
-                /* Quadratisch (1/1) */
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
-                    aspect-ratio: 1 / 1 !important;
                     grid-column: span 1 !important;
                     grid-row: span 1 !important;
                 }
 
-                /* Querformat (2/1) */
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
-                    aspect-ratio: 2 / 1 !important;
-                    grid-column: span 2 !important; /* Über beide Spalten */
+                    grid-column: span 2 !important; 
                     grid-row: span 1 !important;
                 }
 
-                /* Hochformat (1/2) */
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
-                    aspect-ratio: 1 / 2 !important;
                     grid-column: span 1 !important;
                 }
             }
@@ -785,19 +750,16 @@ JS;
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
                     width: 100% !important;
-                    aspect-ratio: 1 / 1 !important;
                     grid-column: span 1 !important;
                     grid-row: auto !important;
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
-                    aspect-ratio: 2 / 1 !important;
                     grid-column: span 1 !important;
                     grid-row: auto !important;
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
-                    aspect-ratio: 1 / 2 !important;
                     grid-column: span 1 !important;
                     grid-row: auto !important;
                 }
@@ -809,29 +771,25 @@ JS;
                     grid-template-columns: 1fr !important;
                     gap: <?php echo $gap; ?>px !important;
                     grid-auto-rows: auto !important;
-                    grid-auto-flow: dense !important; /* sorgt für kompaktes Füllen */
+                    grid-auto-flow: dense !important;
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
-                    aspect-ratio: 1 / 1 !important;
                     grid-column: span 1 !important;
-                    grid-row: auto !important; /* KEIN span */
+                    grid-row: auto !important; 
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
-                    aspect-ratio: 2 / 1 !important;
                     grid-column: span 1 !important;
-                    grid-row: auto !important; /* KEIN span */
+                    grid-row: auto !important; 
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
-                    aspect-ratio: 1 / 2 !important;
                     grid-column: span 1 !important;
-                    grid-row: auto !important; /* KEIN span */
+                    grid-row: auto !important; 
                 }
             }
 
-            /* Sehr kleine Screens: Fallback auf 1 Spalte */
             @media (max-width: 320px) {
                 .wp-block-gallery.masonryer-active {
                     grid-template-columns: 1fr !important;
@@ -845,11 +803,9 @@ JS;
                 .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-square {
                     grid-column: span 1 !important;
                     grid-row: span 1 !important;
-                    aspect-ratio: 4/3 !important;
                 }
             }
 
-            /* Performance-optimierte Bildunterschriften */
             .wp-block-image.masonryer-item figcaption {
                 position: absolute;
                 bottom: 0;
@@ -862,12 +818,10 @@ JS;
                 font-size: 14px;
                 border-bottom-left-radius: <?php echo $radius; ?>;
                 border-bottom-right-radius: <?php echo $radius; ?>;
-                /* Performance-Optimierung für Overlays */
                 transform: translateZ(0);
                 will-change: auto;
             }
 
-            /* Backdrop Filter für Bildunterschriften */
             .wp-block-gallery.has-nested-images figure.wp-block-image:has(figcaption):before {
                 -webkit-backdrop-filter: blur(0) !important;
                 backdrop-filter: blur(0) !important;
@@ -878,5 +832,4 @@ JS;
         <?php
     }
 }
-
 new GalleryMasonryer();
