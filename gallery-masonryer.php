@@ -284,23 +284,28 @@ class GalleryMasonryer
             gallery.style.setProperty('--gallery-columns', columns);
             gallery.classList.add('masonryer-active');
             
-            // Intersection Observer für Lazy Loading der Orientierungsberechnung
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        processGalleryImages(entry.target);
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { rootMargin: '50px' });
+            // Für Hash-Navigation: Bilder sofort verarbeiten, nicht erst bei Sichtbarkeit
+            const hasHashNavigation = (typeof GalleryMasonryerOptions !== 'undefined' && GalleryMasonryerOptions.enableHashNavigation);
+            const hasHash = window.location.hash.includes('#slide-');
             
-            observer.observe(gallery);
+            if (hasHashNavigation && hasHash) {
+                // Sofort verarbeiten wenn Hash-Navigation aktiv ist und Hash vorhanden
+                processGalleryImages(gallery);
+            } else {
+                // Intersection Observer für normale Performance-Optimierung
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            processGalleryImages(entry.target);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { rootMargin: '50px' });
+                
+                observer.observe(gallery);
+            }
         });
 
-        if (typeof GalleryMasonryerOptions !== 'undefined' && GalleryMasonryerOptions.enableLightbox) {
-
-        }
-        
         isInitialized = true;
     };
 
@@ -730,7 +735,7 @@ document.addEventListener(\'DOMContentLoaded\', function() {
         
         const enableHashNavigation = (typeof GalleryMasonryerOptions !== \'undefined\' && GalleryMasonryerOptions.enableHashNavigation);
         
-        function updateHash(galleryIndex, slideIndex) {
+        function updateHash(slideIndex) {
             if (!enableHashNavigation) return;
             isHashNavigating = true;
             window.history.pushState(null, null, `#slide-${slideIndex}`);
@@ -750,8 +755,7 @@ document.addEventListener(\'DOMContentLoaded\', function() {
             const match = hash.match(/#slide-(\\d+)/);
             if (match) {
                 return {
-                    galleryIndex: parseInt(match[1]),
-                    slideIndex: parseInt(match[2])
+                    slideIndex: parseInt(match[1], 10)
                 };
             }
             return null;
@@ -917,7 +921,14 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                 hashChangeHandler = function() {
                     if (isHashNavigating) return;
                     const hashData = parseHashForGallerySlide();
-                    if (!hashData && swiperInstance) {
+                    if (hashData && swiperInstance) {
+                        const target = hashData.slideIndex || 0;
+                        if (typeof swiperInstance.slideToLoop === \'function\') {
+                            swiperInstance.slideToLoop(target);
+                        } else if (typeof swiperInstance.slideTo === \'function\') {
+                            swiperInstance.slideTo(target);
+                        }
+                    } else if (!hashData && swiperInstance) {
                         // Hash wurde entfernt - Lightbox schließen
                         closeLightbox();
                     }
@@ -947,14 +958,14 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                             if (enableHashNavigation) {
                                 // Verwende realIndex für korrekte Hash-Navigation bei Loop-Modus
                                 const slideIndex = this.realIndex !== undefined ? this.realIndex : startIndex;
-                                updateHash(currentGalleryIndex, slideIndex);
+                                updateHash(slideIndex);
                             }
                         },
                         slideChange: function() {
                             if (enableHashNavigation) {
                                 // Verwende realIndex statt activeIndex für korrekte Hash-Navigation
                                 const slideIndex = this.realIndex !== undefined ? this.realIndex : this.activeIndex;
-                                updateHash(currentGalleryIndex, slideIndex);
+                                updateHash(slideIndex);
                             }
                         }
                     }
@@ -1017,11 +1028,40 @@ document.addEventListener(\'DOMContentLoaded\', function() {
         if (enableHashNavigation) {
             const hashData = parseHashForGallerySlide();
             if (hashData) {
-                const galleries = document.querySelectorAll(\'.wp-block-gallery.masonryer-active\');
-                if (galleries[hashData.galleryIndex]) {
-                    setTimeout(() => {
-                        createLightbox(galleries[hashData.galleryIndex], hashData.slideIndex, hashData.galleryIndex);
-                    }, 500);
+                console.log(\'Hash detected on load:\', hashData);
+                
+                // Warten bis alle Galerien vollständig geladen sind
+                function waitForGalleriesAndOpen() {
+                    const galleries = document.querySelectorAll(\'.wp-block-gallery.masonryer-active\');
+                    console.log(\'Galleries found:\', galleries.length);
+                    
+                    if (galleries.length > 0) {
+                        // Öffne die erste Galerie mit dem gewünschten Slide-Index
+                        const targetGallery = galleries[0]; // Erste Galerie nehmen
+                        const images = targetGallery.querySelectorAll(\'.wp-block-image img, figure.wp-block-image img\');
+                        
+                        if (images.length > hashData.slideIndex) {
+                            console.log(\'Opening gallery with slide:\', hashData.slideIndex);
+                            createLightbox(targetGallery, hashData.slideIndex, 0);
+                        } else {
+                            console.log(\'Slide index out of range:\', hashData.slideIndex, \'of\', images.length);
+                        }
+                    } else {
+                        // Nochmal versuchen nach weiteren 250ms
+                        if (document.readyState === \'complete\') {
+                            setTimeout(waitForGalleriesAndOpen, 250);
+                        }
+                    }
+                }
+                
+                // Sofort versuchen, falls DOM bereits geladen
+                if (document.readyState === \'complete\') {
+                    setTimeout(waitForGalleriesAndOpen, 100);
+                } else {
+                    // Warten bis DOM vollständig geladen ist
+                    window.addEventListener(\'load\', () => {
+                        setTimeout(waitForGalleriesAndOpen, 250);
+                    });
                 }
             }
         }
