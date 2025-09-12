@@ -444,6 +444,10 @@ JS;
 
         ?>
         <style>
+            .lightbox-overlay{
+                -webkit-backdrop-filter: blur(6px);
+                backdrop-filter: blur(6px);
+            }
 
             .swiper-button-next,
             .swiper-button-prev,
@@ -874,7 +878,7 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                 z-index: 1000000 !important;
                 line-height: 1 !important;
                 user-select: none !important;
-                font-weight: bold !important;
+                font-weight: normal !important;
             `;
             
             const images = gallery.querySelectorAll(\'.wp-block-image img, figure.wp-block-image img\');
