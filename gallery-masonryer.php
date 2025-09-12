@@ -464,12 +464,12 @@ JS;
 
             .swiper-pagination{
                 color: <?php echo $lightbox_overlay_rgba; ?> !important;
-                bottom: 3vw;
+                bottom: 10px;
             }
 
             .swiper-pagination-spancontainer{
                 background-color: <?php echo $ui_color; ?> !important;
-                padding: 0.5rem 1.25rem !important;
+                padding: 0.2rem 0.75rem !important;
                 border-radius: <?php echo $radius; ?> !important;
                 color: <?php echo $lightbox_overlay_rgba; ?> !important;
             }
@@ -632,6 +632,10 @@ JS;
                     gap: <?php echo $gap; ?>px !important;
                     grid-auto-rows: auto !important;
                     grid-auto-flow: dense !important;
+                }
+                
+                .swiper-pagination{
+                    bottom: 85px;
                 }
 
                 .swiper-button-prev, .swiper-rtl .swiper-button-next{
@@ -929,8 +933,8 @@ document.addEventListener(\'DOMContentLoaded\', function() {
             pagination.style.cssText = `color: ${uiColor} !important; z-index: 1000000 !important;`;
             closeButton.style.cssText = `
                 position: absolute !important;
-                top: 20px !important;
-                right: 30px !important;
+                top: 10px !important;
+                right: 20px !important;
                 color: ${uiColor} !important;
                 font-size: 50px !important;
                 cursor: pointer !important;
