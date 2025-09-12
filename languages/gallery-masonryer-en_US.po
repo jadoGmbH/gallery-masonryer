@@ -5,7 +5,7 @@ msgstr ""
 "PO-Revision-Date: 2025-09-01 12:28+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: de_DE\n"
+"Language: en_US\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -50,11 +50,11 @@ msgstr "Use CSS Grid Dense Auto-Placement"
 
 #: gallery-masonryer.php:76
 msgid "Hinweis:"
-msgstr "hint:"
+msgstr "Note:"
 
 #: gallery-masonryer.php:77
 msgid "Bildgrößen:"
-msgstr "Image Sites:"
+msgstr "Image sizes:"
 
 #: gallery-masonryer.php:79
 msgid "Landscape:"
@@ -107,3 +107,8 @@ msgstr "Extends Gutenberg Gallery Blocks with orientation-based grid layouts."
 #. Author of the plugin/theme
 msgid "jado GmbH"
 msgstr "jado GmbH"
+
+
+#: gallery-masonryer.php:146
+msgid "URL-Hash wird beim Navigieren in der Lightbox aktualisiert (ermöglicht Browser-Zurück-Navigation)"
+msgstr "URL hash updates when navigating in the lightbox (enables browser back navigation)"
