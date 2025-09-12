@@ -6,7 +6,7 @@
  * Author: jado GmbH
  * Text Domain: gallery-masonryer
  * Domain Path: /languages
- * Dieses Plugin nutzt Swiper.js (MIT License) – Copyright © Vladimir Kharlampidi
+ * License: This plugin uses Swiper.js (MIT License) – Copyright © Vladimir Kharlampidi
  */
 
 if (!defined('ABSPATH')) exit;
