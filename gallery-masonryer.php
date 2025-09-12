@@ -6,6 +6,7 @@
  * Author: jado GmbH
  * Text Domain: gallery-masonryer
  * Domain Path: /languages
+ * License: This plugin uses Swiper.js (MIT License) – Copyright © Vladimir Kharlampidi
  */
 
 if (!defined('ABSPATH')) exit;
@@ -60,6 +61,7 @@ class GalleryMasonryer
                 },
                 'default' => false,
         ]);
+
         register_setting('gallery_masonryer_options', 'lightbox_background_color', [
                 'type' => 'string',
                 'sanitize_callback' => 'sanitize_hex_color',
@@ -153,8 +155,10 @@ class GalleryMasonryer
             <!-- Live-Vorschau -->
             <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #0073aa;">
                 <h3><?php _e('Live-Vorschau:', 'gallery-masonryer'); ?></h3>
-                <div id="lightbox-preview" style="width: 200px; height: 100px; border: 2px solid #ddd; border-radius: 4px; position: relative; overflow: hidden; background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;">
-                    <div id="preview-overlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                <div id="lightbox-preview"
+                     style="width: 200px; height: 100px; border: 2px solid #ddd; border-radius: 4px; position: relative; overflow: hidden; background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;">
+                    <div id="preview-overlay"
+                         style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
                         <?php _e('Lightbox Hintergrund', 'gallery-masonryer'); ?>
                     </div>
                 </div>
@@ -179,197 +183,47 @@ class GalleryMasonryer
         </div>
 
         <script type="text/javascript">
-            jQuery(document).ready(function($) {
+            jQuery(document).ready(function ($) {
                 $('.color-picker').wpColorPicker({
-                    change: function(event, ui) {
+                    change: function (event, ui) {
                         updatePreview();
                     },
-                    clear: function() {
+                    clear: function () {
                         updatePreview();
                     }
                 });
-                $('#lightbox_background_opacity').on('input', function() {
+                $('#lightbox_background_opacity').on('input', function () {
                     $('#opacity-value').text($(this).val() + '%');
                     updatePreview();
                 });
+
                 function updatePreview() {
                     var color = $('#lightbox_background_color').val() || '#000000';
                     var opacity = $('#lightbox_background_opacity').val() / 100;
-                    var r = parseInt(color.substr(1,2), 16);
-                    var g = parseInt(color.substr(3,2), 16);
-                    var b = parseInt(color.substr(5,2), 16);
+                    var r = parseInt(color.substr(1, 2), 16);
+                    var g = parseInt(color.substr(3, 2), 16);
+                    var b = parseInt(color.substr(5, 2), 16);
                     var rgba = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
                     $('#preview-overlay').css('background-color', rgba);
                     var brightness = (r * 299 + g * 587 + b * 114) / 1000;
                     var textColor = brightness > 128 ? '#333333' : '#ffffff';
                     $('#preview-overlay').css('color', textColor);
                 }
+
                 updatePreview();
             });
         </script>
         <?php
     }
 
-    public function enqueue_assets()
-    {
-        wp_register_script(
-                'gallery-masonryer',
-                '',
-                [],
-                '1.3.2',
-                true
-        );
-        wp_enqueue_script('gallery-masonryer');
-        wp_register_style(
-                'gallery-masonryer-lightbox',
-                '',
-                [],
-                '1.3.2'
-        );
-        wp_enqueue_style('gallery-masonryer-lightbox');
-        $js_options = [
-                'enableLightbox' => get_option('enable_lightbox', false),
-        ];
-        wp_add_inline_script('gallery-masonryer', 'const GalleryMasonryerOptions = ' . wp_json_encode($js_options) . ';', 'before');
-        wp_add_inline_script('gallery-masonryer', $this->get_script());
-        if (get_option('enable_lightbox', false)) {
-            wp_add_inline_style('gallery-masonryer-lightbox', $this->get_lightbox_styles());
-        }
-    }
-
-    private function get_lightbox_background_style()
-    {
-        $color = get_option('lightbox_background_color', '#000000');
-        $opacity = get_option('lightbox_background_opacity', 90) / 100;
-        $color = str_replace('#', '', $color);
-        $r = hexdec(substr($color, 0, 2));
-        $g = hexdec(substr($color, 2, 2));
-        $b = hexdec(substr($color, 4, 2));
-        return "rgba({$r}, {$g}, {$b}, {$opacity})";
-    }
-
-    private function get_lightbox_styles()
-    {
-        $background_color = $this->get_lightbox_background_style();
-        $color = get_option('lightbox_background_color', '#000000');
-        $color = str_replace('#', '', $color);
-        $r = hexdec(substr($color, 0, 2));
-        $g = hexdec(substr($color, 2, 2));
-        $b = hexdec(substr($color, 4, 2));
-        $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
-        $text_color = $brightness > 128 ? '#333333' : '#ffffff';
-        return <<<CSS
-/* Simple Lightbox Styles */
-.simple-lightbox {
-    display: none !important;
-    position: fixed !important;
-    z-index: 999999 !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background-color: {$background_color} !important;
-    animation: fadeIn 0.3s !important;
-    box-sizing: border-box !important;
-}
-
-.simple-lightbox.active {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-.simple-lightbox img {
-    max-width: 90% !important;
-    max-height: 90% !important;
-    object-fit: contain !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
-}
-
-.simple-lightbox .close {
-    position: absolute !important;
-    top: 20px !important;
-    right: 30px !important;
-    color: {$text_color} !important;
-    cursor: pointer !important;
-    user-select: none !important;
-    background: none !important;
-    border: none !important;
-    padding: 10px !important;
-    line-height: 1 !important;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
-}
-
-.simple-lightbox .close svg{
-width: 2rem;
-height: 2rem;
-}
-
-.simple-lightbox .close:hover {
-    opacity: 0.7 !important;
-}
-
-.simple-lightbox .nav {
-    position: absolute !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    color: {$text_color} !important;
-    font-weight: bold !important;
-    cursor: pointer !important;
-    user-select: none !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    border: none !important;
-    padding: 8px 8px !important;
-    border-radius: 4px !important;
-}
-
-.simple-lightbox .nav svg{
-width: 2rem;
-height: 2rem;
-}
-
-.simple-lightbox .nav:hover {
-    background: rgba(0, 0, 0, 0.6) !important;
-}
-
-.simple-lightbox .prev {
-    left: 20px !important;
-}
-
-.simple-lightbox .next {
-    right: 20px !important;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.masonryer-item.lightbox-enabled {
-    overflow: hidden;
-}
-
-.masonryer-item.lightbox-enabled img {
-    transition: transform 0.15s ease-out !important;
-}
-
-.masonryer-item.lightbox-enabled img:hover {
-    transform: translateZ(0) scale(1.02) !important;
-}
-CSS;
-    }
 
     private function get_script()
     {
         return <<<JS
 (function(){
-    let lightboxImages = [];
     let currentIndex = 0;
-    let lightboxElement = null;
     let isInitialized = false;
     
-    // Performance-optimierte Initialisierung
     const initGalleryMasonryer = () => {
         if (isInitialized) return;
         
@@ -397,7 +251,7 @@ CSS;
         });
 
         if (typeof GalleryMasonryerOptions !== 'undefined' && GalleryMasonryerOptions.enableLightbox) {
-            initSimpleLightbox();
+
         }
         
         isInitialized = true;
@@ -465,85 +319,11 @@ CSS;
             img.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                openLightbox(img);
             }, { passive: false });
         }
     };
-
-    const initSimpleLightbox = () => {
-        if (document.querySelector('.simple-lightbox')) return;
-        
-        lightboxElement = document.createElement('div');
-        lightboxElement.className = 'simple-lightbox';
-        lightboxElement.innerHTML = '<button class="close"><svg width="100%" height="100%" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,0.708,0.707)"><g id="if_misc-_close__1276877_3_"><path d="M4.293,5L-0.354,0.354C-0.549,0.158 -0.549,-0.158 -0.354,-0.354C-0.158,-0.549 0.158,-0.549 0.354,-0.354L5,4.293L9.646,-0.354C9.842,-0.549 10.158,-0.549 10.354,-0.354C10.549,-0.158 10.549,0.158 10.354,0.354L5.707,5L10.354,9.646C10.549,9.842 10.549,10.158 10.354,10.354C10.158,10.549 9.842,10.549 9.646,10.354L5,5.707L0.354,10.354C0.158,10.549 -0.158,10.549 -0.354,10.354C-0.549,10.158 -0.549,9.842 -0.354,9.646L4.293,5Z" style="fill:white;"/></g></g></svg></button><button class="nav prev"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,4,0)"><path d="M10.477,0.477C10.741,0.741 10.741,1.168 10.477,1.432L1.909,10L10.477,18.568C10.741,18.832 10.741,19.259 10.477,19.523C10.214,19.786 9.786,19.786 9.523,19.523L0.707,10.707C0.317,10.317 0.317,9.683 0.707,9.293L9.523,0.477C9.786,0.214 10.214,0.214 10.477,0.477Z" style="fill:white;fill-rule:nonzero;"/></g></svg></button><button class="nav next"><svg width="100%" height="100%" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(1,0,0,1,4,0)"><path d="M1.377,19.523C1.114,19.259 1.114,18.832 1.377,18.568L9.945,10L1.377,1.432C1.114,1.168 1.114,0.741 1.377,0.477C1.641,0.214 2.068,0.214 2.332,0.477L11.147,9.293C11.538,9.683 11.538,10.317 11.147,10.707L2.332,19.523C2.068,19.786 1.641,19.786 1.377,19.523Z" style="fill:white;fill-rule:nonzero;"/></g></svg></button><img src="" alt="">';
-        
-        document.body.appendChild(lightboxElement);
-        
-        // Event Listeners mit passiven Events für bessere Performance
-        lightboxElement.querySelector('.close').addEventListener('click', closeLightbox);
-        lightboxElement.querySelector('.prev').addEventListener('click', prevImage);
-        lightboxElement.querySelector('.next').addEventListener('click', nextImage);
-        lightboxElement.addEventListener('click', (e) => {
-            if (e.target === lightboxElement) closeLightbox();
-        });
-        
-        document.addEventListener('keydown', (e) => {
-            if (lightboxElement && lightboxElement.classList.contains('active')) {
-                switch(e.key) {
-                    case 'Escape': closeLightbox(); break;
-                    case 'ArrowLeft': prevImage(); break;
-                    case 'ArrowRight': nextImage(); break;
-                }
-            }
-        }, { passive: true });
-    };
-
-    const openLightbox = (img) => {
-        if (!lightboxElement) return;
-        
-        const gallery = img.closest('.wp-block-gallery');
-        if (!gallery) return;
-        
-        lightboxImages = Array.from(gallery.querySelectorAll('.masonryer-item img'));
-        currentIndex = lightboxImages.indexOf(img);
-        showImageInLightbox(currentIndex);
-        lightboxElement.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    };
-
-    const showImageInLightbox = (index) => {
-        const img = lightboxImages[index];
-        const lightboxImg = lightboxElement.querySelector('img');
-        const fullSize = getFullSizeFromSrcset(img);
-        lightboxImg.src = fullSize;
-        lightboxImg.alt = img.alt || '';
-        
-        const prevBtn = lightboxElement.querySelector('.prev');
-        const nextBtn = lightboxElement.querySelector('.next');
-        prevBtn.style.display = index > 0 ? 'block' : 'none';
-        nextBtn.style.display = index < lightboxImages.length - 1 ? 'block' : 'none';
-    };
-
-    const closeLightbox = () => {
-        if (lightboxElement) {
-            lightboxElement.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    };
-
-    const prevImage = () => {
-        if (currentIndex > 0) {
-            currentIndex--;
-            showImageInLightbox(currentIndex);
-        }
-    };
-
-    const nextImage = () => {
-        if (currentIndex < lightboxImages.length - 1) {
-            currentIndex++;
-            showImageInLightbox(currentIndex);
-        }
-    };
+    
+    
 
     const getFullSizeFromSrcset = (img) => {
         const srcset = img.getAttribute('srcset');
@@ -560,14 +340,12 @@ CSS;
         return sources[0] ? sources[0].url : img.src;
     };
 
-    // Optimierte Event-Handler
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initGalleryMasonryer);
     } else {
         initGalleryMasonryer();
     }
 
-    // Throttled Resize Handler
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
@@ -577,7 +355,6 @@ CSS;
         }, 250);
     }, { passive: true });
 
-    // MutationObserver für dynamisch hinzugefügte Inhalte
     const observer = new MutationObserver((mutations) => {
         let shouldReinit = false;
         mutations.forEach((mutation) => {
@@ -658,9 +435,13 @@ JS;
             .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-square {
                 box-sizing: border-box !important;
             }
-            
+
             .wp-block-gallery.masonryer-active .wp-block-image.masonryer-item,
-            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item  {
+            .wp-block-gallery.masonryer-active figure.wp-block-image.masonryer-item {
+                border-radius: <?php echo $radius; ?>;
+            }
+
+            .swiper-slide img{
                 border-radius: <?php echo $radius; ?>;
             }
 
@@ -678,7 +459,7 @@ JS;
                 contain: layout style paint;
             }
 
-            .wp-block-gallery.masonryer-active{
+            .wp-block-gallery.masonryer-active {
                 grid-auto-rows: calc((100% - (var(--gallery-columns, 3) - 1) * <?php echo $gap; ?>px) / var(--gallery-columns));
             }
 
@@ -728,7 +509,7 @@ JS;
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
-                    grid-column: span 2 !important; 
+                    grid-column: span 2 !important;
                     grid-row: span 1 !important;
                 }
 
@@ -736,7 +517,6 @@ JS;
                     grid-column: span 1 !important;
                 }
             }
-
 
 
             /* Handy */
@@ -776,17 +556,17 @@ JS;
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
                     grid-column: span 1 !important;
-                    grid-row: auto !important; 
+                    grid-row: auto !important;
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-landscape {
                     grid-column: span 1 !important;
-                    grid-row: auto !important; 
+                    grid-row: auto !important;
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-portrait {
                     grid-column: span 1 !important;
-                    grid-row: auto !important; 
+                    grid-row: auto !important;
                 }
             }
 
@@ -831,5 +611,319 @@ JS;
         </style>
         <?php
     }
+
+    public function enqueue_assets()
+    {
+        wp_register_script(
+                'gallery-masonryer',
+                '',
+                [],
+                '1.3.3',
+                true
+        );
+        wp_enqueue_script('gallery-masonryer');
+        wp_register_style(
+                'gallery-masonryer',
+                '',
+                [],
+                '1.3.3'
+        );
+        wp_enqueue_style('gallery-masonryer');
+
+        // Plugin-Optionen ins JS übergeben (KORRIGIERT - nur ein Array!)
+        $js_options = [
+                'enableLightbox' => get_option('enable_lightbox', false),
+                'lightboxBackgroundColor' => get_option('lightbox_background_color', '#000000'),
+                'lightboxBackgroundOpacity' => get_option('lightbox_background_opacity', 90),
+        ];
+
+        wp_add_inline_script(
+                'gallery-masonryer',
+                'const GalleryMasonryerOptions = ' . wp_json_encode($js_options) . ';',
+                'before'
+        );
+        wp_add_inline_script('gallery-masonryer', $this->get_script());
+
+        if (!empty($js_options['enableLightbox'])) {
+            wp_enqueue_style(
+                    'swiper',
+                    plugin_dir_url(__FILE__) . 'assets/swiper-bundle.min.css',
+                    [],
+                    '11.0.0'
+            );
+            wp_enqueue_script(
+                    'swiper',
+                    plugin_dir_url(__FILE__) . 'assets/swiper-bundle.min.js',
+                    [],
+                    '11.0.0',
+                    true
+            );
+
+
+// Ersetze den gesamten $init_lightbox Teil mit diesem Code:
+
+            $init_lightbox = '
+document.addEventListener(\'DOMContentLoaded\', function() {
+    if(typeof Swiper !== \'undefined\') {
+        let swiperInstance = null;
+        let swiperContainer = null;
+        let keydownHandler = null;
+        let clickHandler = null;
+        
+        function closeLightbox() {
+            console.log(\'Closing lightbox...\');
+            
+            if (keydownHandler) {
+                document.removeEventListener(\'keydown\', keydownHandler);
+                keydownHandler = null;
+            }
+            
+            if (clickHandler && swiperContainer) {
+                swiperContainer.removeEventListener(\'click\', clickHandler);
+                clickHandler = null;
+            }
+            
+            if (swiperInstance) {
+                try {
+                    swiperInstance.destroy(true, true);
+                } catch(e) {
+                    console.log(\'Error destroying swiper:\', e);
+                }
+                swiperInstance = null;
+            }
+            
+            if (swiperContainer) {
+                try {
+                    if (swiperContainer.parentNode) {
+                        swiperContainer.parentNode.removeChild(swiperContainer);
+                    }
+                } catch(e) {
+                    console.log(\'Error removing container:\', e);
+                }
+                swiperContainer = null;
+            }
+            
+            document.body.style.overflow = \'\';
+            document.body.classList.remove(\'lightbox-open\');
+        }
+        
+        function getLightboxBackground() {
+            if (typeof GalleryMasonryerOptions !== \'undefined\') {
+                const color = GalleryMasonryerOptions.lightboxBackgroundColor || \'#000000\';
+                const opacity = (GalleryMasonryerOptions.lightboxBackgroundOpacity || 90) / 100;
+                
+                const r = parseInt(color.substr(1,2), 16);
+                const g = parseInt(color.substr(3,2), 16);
+                const b = parseInt(color.substr(5,2), 16);
+                
+                return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            }
+            return \'rgba(0, 0, 0, 0.95)\';
+        }
+        
+        function createLightbox(gallery, startIndex = 0) {
+            if (swiperContainer) {
+                closeLightbox();
+                setTimeout(() => createLightbox(gallery, startIndex), 100);
+                return;
+            }
+            
+            swiperContainer = document.createElement(\'div\');
+            swiperContainer.className = \'swiper lightbox-overlay\';
+            swiperContainer.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: ${getLightboxBackground()} !important;
+                z-index: 999999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                cursor: pointer !important;
+            `;
+            
+            const swiperWrapper = document.createElement(\'div\');
+            swiperWrapper.className = \'swiper-wrapper\';
+            
+            const prevButton = document.createElement(\'div\');
+            prevButton.className = \'swiper-button-prev\';
+            prevButton.style.cssText = \'color: white !important; z-index: 1000000 !important;\';
+            
+            const nextButton = document.createElement(\'div\');
+            nextButton.className = \'swiper-button-next\';
+            nextButton.style.cssText = \'color: white !important; z-index: 1000000 !important;\';
+            
+            const pagination = document.createElement(\'div\');
+            pagination.className = \'swiper-pagination\';
+            pagination.style.cssText = \'color: white !important; z-index: 1000000 !important;\';
+            
+            const closeButton = document.createElement(\'div\');
+            closeButton.innerHTML = \'×\';
+            closeButton.style.cssText = `
+                position: absolute !important;
+                top: 20px !important;
+                right: 30px !important;
+                color: white !important;
+                font-size: 50px !important;
+                cursor: pointer !important;
+                z-index: 1000000 !important;
+                line-height: 1 !important;
+                user-select: none !important;
+                font-weight: bold !important;
+            `;
+            
+            const images = gallery.querySelectorAll(\'.wp-block-image img, figure.wp-block-image img\');
+            console.log(\'Found images:\', images.length);
+            
+            images.forEach((img, index) => {
+                const slide = document.createElement(\'div\');
+                slide.className = \'swiper-slide\';
+                slide.style.cssText = `
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    cursor: default !important;
+                `;
+                
+                const clonedImg = img.cloneNode(true);
+                clonedImg.style.cssText = `
+                    max-width: calc(100vw - 40px) !important;
+                    max-height: calc(100vh - 40px) !important;
+                    width: auto !important;
+                    height: auto !important;
+                    object-fit: contain !important;
+                    cursor: default !important;
+                    pointer-events: none !important;
+                `;
+                
+                slide.appendChild(clonedImg);
+                swiperWrapper.appendChild(slide);
+            });
+            
+            swiperContainer.appendChild(swiperWrapper);
+            swiperContainer.appendChild(prevButton);
+            swiperContainer.appendChild(nextButton);
+            swiperContainer.appendChild(pagination);
+            swiperContainer.appendChild(closeButton);
+            
+            document.body.appendChild(swiperContainer);
+            document.body.classList.add(\'lightbox-open\');
+            
+            try {
+                swiperInstance = new Swiper(swiperContainer, {
+                    loop: images.length > 1,
+                    initialSlide: startIndex,
+                    navigation: {
+                        nextEl: \'.swiper-button-next\',
+                        prevEl: \'.swiper-button-prev\'
+                    },
+                    pagination: {
+                        el: \'.swiper-pagination\',
+                        clickable: true,
+                        type: \'fraction\'
+                    },
+                    keyboard: {
+                        enabled: true
+                    },
+                    on: {
+                        init: function() {
+                            console.log(\'Swiper initialized\');
+                        }
+                    }
+                });
+                console.log(\'Swiper created successfully\');
+            } catch(e) {
+                console.error(\'Error creating swiper:\', e);
+            }
+            
+            closeButton.addEventListener(\'click\', function(e) {
+                console.log(\'Close button clicked\');
+                e.stopPropagation();
+                e.preventDefault();
+                closeLightbox();
+            });
+            
+            clickHandler = function(e) {
+                if (e.target === swiperContainer) {
+                    console.log(\'Clicked outside, closing\');
+                    closeLightbox();
+                }
+            };
+            swiperContainer.addEventListener(\'click\', clickHandler);
+            
+            keydownHandler = function(e) {
+                if (e.key === \'Escape\') {
+                    console.log(\'ESC pressed, closing\');
+                    closeLightbox();
+                }
+            };
+            document.addEventListener(\'keydown\', keydownHandler);
+            
+            document.body.style.overflow = \'hidden\';
+        }
+        
+        function attachLightboxListeners() {
+            const galleries = document.querySelectorAll(\'.wp-block-gallery.masonryer-active\');
+            console.log(\'Found galleries:\', galleries.length);
+            
+            galleries.forEach(gallery => {
+                const images = gallery.querySelectorAll(\'.wp-block-image img, figure.wp-block-image img\');
+                console.log(\'Gallery images:\', images.length);
+                
+                images.forEach((img, index) => {
+                    img.removeEventListener(\'click\', img.lightboxHandler);
+                    
+                    img.lightboxHandler = function(e) {
+                        console.log(\'Image clicked, index:\', index);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        createLightbox(gallery, index);
+                    };
+                    
+                    img.addEventListener(\'click\', img.lightboxHandler);
+                });
+            });
+        }
+        
+        attachLightboxListeners();
+        
+        const observer = new MutationObserver(function(mutations) {
+            let shouldReattach = false;
+            mutations.forEach(mutation => {
+                if (mutation.addedNodes) {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && 
+                            (node.classList?.contains(\'masonryer-active\') || 
+                             node.querySelector?.(\'.masonryer-active\'))) {
+                            shouldReattach = true;
+                        }
+                    });
+                }
+            });
+            
+            if (shouldReattach) {
+                setTimeout(attachLightboxListeners, 500);
+            }
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        const style = document.createElement(\'style\');
+        style.textContent = \'body.lightbox-open {overflow: hidden !important;}.lightbox-overlay * {box-sizing: border-box !important;}\';
+        document.head.appendChild(style);
+    }
+});
+';
+            wp_add_inline_script('swiper', $init_lightbox);
+        }
+    }
 }
+
 new GalleryMasonryer();

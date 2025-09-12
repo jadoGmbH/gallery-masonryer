@@ -7,7 +7,7 @@ Options (extra settings page)
  - border radius of all images
  - gap between images
  - CSS grid dense auto-placement
- - activate Lightbox on all Images of gallery
+ - activate lightbox on all Images of gallery (https://swiperjs.com)
  - colour of overlay when lightbox is activated
 
-Demo Website: https://masonryer.ja.do
+Demo Website: https://albert.ag
