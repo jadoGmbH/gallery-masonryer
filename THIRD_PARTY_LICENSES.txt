@@ -1,0 +1,6 @@
+This plugin bundles the following third-party libraries:
+
+Swiper.js
+https://swiperjs.com
+License: MIT
+Copyright (c) 2019-2025 Vladimir Kharlampidi
