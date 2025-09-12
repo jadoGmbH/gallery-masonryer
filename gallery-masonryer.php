@@ -6,7 +6,7 @@
  * Author: jado GmbH
  * Text Domain: gallery-masonryer
  * Domain Path: /languages
- * License: This plugin uses Swiper.js (MIT License) – Copyright © Vladimir Kharlampidi
+ * Dieses Plugin nutzt Swiper.js (MIT License) – Copyright © Vladimir Kharlampidi
  */
 
 if (!defined('ABSPATH')) exit;
@@ -40,6 +40,13 @@ class GalleryMasonryer
                 'sanitize_callback' => 'absint',
                 'default' => 10,
         ]);
+
+        register_setting('gallery_masonryer_options', 'lightbox_ui_color', [
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_hex_color',
+                'default' => '#ffffff',
+        ]);
+
         register_setting('gallery_masonryer_options', 'gallery_radius', [
                 'type' => 'string',
                 'sanitize_callback' => function ($val) {
@@ -131,6 +138,20 @@ class GalleryMasonryer
                                    class="color-picker" data-default-color="#000000">
                             <p class="description">
                                 <?php _e('Wählen Sie die Grundfarbe für den Lightbox-Hintergrund.', 'gallery-masonryer'); ?>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row"><label
+                                    for="lightbox_ui_color"><?php _e('Lightbox UI-Farbe', 'gallery-masonryer'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="lightbox_ui_color" name="lightbox_ui_color"
+                                   value="<?php echo esc_attr(get_option('lightbox_ui_color', '#ffffff')); ?>"
+                                   class="color-picker" data-default-color="#ffffff">
+                            <p class="description">
+                                <?php _e('Wählen Sie die Farbe für Navigation, Pagination und den Schließen-Button.', 'gallery-masonryer'); ?>
                             </p>
                         </td>
                     </tr>
@@ -388,9 +409,18 @@ JS;
         $gap = absint(get_option('gallery_gap', 10));
         $radius = esc_attr(get_option('gallery_radius', '0px'));
         $random_placement = get_option('random_placement', false) ? 'dense' : 'row';
+        $ui_color = esc_attr(get_option('lightbox_ui_color', '#ffffff'));
 
         ?>
         <style>
+
+            .swiper-button-next,
+            .swiper-button-prev,
+            .swiper-pagination,
+            .masonryer-lightbox-close {
+                color: <?php echo $ui_color; ?> !important;
+            }
+
             .wp-block-gallery.masonryer-active.has-nested-images,
             .wp-block-gallery.masonryer-active.is-layout-flex,
             .wp-block-gallery.masonryer-active {
@@ -635,6 +665,7 @@ JS;
                 'enableLightbox' => get_option('enable_lightbox', false),
                 'lightboxBackgroundColor' => get_option('lightbox_background_color', '#000000'),
                 'lightboxBackgroundOpacity' => get_option('lightbox_background_opacity', 90),
+                'lightboxUIColor' => get_option('lightbox_ui_color', '#ffffff'),
         ];
 
         wp_add_inline_script(
@@ -658,9 +689,6 @@ JS;
                     '11.0.0',
                     true
             );
-
-
-// Ersetze den gesamten $init_lightbox Teil mit diesem Code:
 
             $init_lightbox = '
 document.addEventListener(\'DOMContentLoaded\', function() {
@@ -749,23 +777,27 @@ document.addEventListener(\'DOMContentLoaded\', function() {
             
             const prevButton = document.createElement(\'div\');
             prevButton.className = \'swiper-button-prev\';
-            prevButton.style.cssText = \'color: white !important; z-index: 1000000 !important;\';
             
             const nextButton = document.createElement(\'div\');
             nextButton.className = \'swiper-button-next\';
-            nextButton.style.cssText = \'color: white !important; z-index: 1000000 !important;\';
             
             const pagination = document.createElement(\'div\');
             pagination.className = \'swiper-pagination\';
-            pagination.style.cssText = \'color: white !important; z-index: 1000000 !important;\';
             
             const closeButton = document.createElement(\'div\');
             closeButton.innerHTML = \'×\';
+            
+            // UI-Farbe korrekt anwenden
+            const uiColor = (typeof GalleryMasonryerOptions !== \'undefined\' && GalleryMasonryerOptions.lightboxUIColor) ? GalleryMasonryerOptions.lightboxUIColor : \'#ffffff\';
+            
+            prevButton.style.cssText = `color: ${uiColor} !important; z-index: 1000000 !important;`;
+            nextButton.style.cssText = `color: ${uiColor} !important; z-index: 1000000 !important;`;
+            pagination.style.cssText = `color: ${uiColor} !important; z-index: 1000000 !important;`;
             closeButton.style.cssText = `
                 position: absolute !important;
                 top: 20px !important;
                 right: 30px !important;
-                color: white !important;
+                color: ${uiColor} !important;
                 font-size: 50px !important;
                 cursor: pointer !important;
                 z-index: 1000000 !important;
