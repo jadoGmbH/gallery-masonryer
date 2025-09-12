@@ -28,7 +28,7 @@ Turns every WordPress Gallery into a Masonry Grid (pure CSS) after activating th
 
 ## Demo
 
-Visit our demo website: [https://www.ja.do](https://www.ja.do)
+Visit our demo website: [https://albert.ag](https://albert.ag)
 
 ## License
 
