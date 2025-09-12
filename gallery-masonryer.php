@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gallery Masonryer (Optimized)
  * Description: Erweitert Gutenberg Gallery Blocks mit Orientierungs-basierten Grid-Layouts - Performance optimiert.
- * Version: 1.3.3
+ * Version: 1.3.4
  * Author: jado GmbH
  * Text Domain: gallery-masonryer
  * Domain Path: /languages
@@ -81,6 +81,14 @@ class GalleryMasonryer
                 },
                 'default' => 90,
         ]);
+
+        register_setting('gallery_masonryer_options', 'enable_hash_navigation', [
+                'type' => 'boolean',
+                'sanitize_callback' => function ($val) {
+                    return (bool)$val;
+                },
+                'default' => false,
+        ]);
     }
 
     public function settings_page_html()
@@ -126,6 +134,16 @@ class GalleryMasonryer
                             <input type="checkbox" id="enable_lightbox" name="enable_lightbox"
                                    value="1" <?php checked(1, get_option('enable_lightbox', false)); ?>>
                             <label for="enable_lightbox"><?php _e('Aktiviere eine einfache, funktionsfähige Lightbox', 'gallery-masonryer'); ?></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label
+                                    for="enable_hash_navigation"><?php _e('Hash-Navigation in Lightbox', 'gallery-masonryer'); ?></label>
+                        </th>
+                        <td>
+                            <input type="checkbox" id="enable_hash_navigation" name="enable_hash_navigation"
+                                   value="1" <?php checked(1, get_option('enable_hash_navigation', false)); ?>>
+                            <label for="enable_hash_navigation"><?php _e('URL-Hash wird beim Navigieren in der Lightbox aktualisiert (ermöglicht Browser-Zurück-Navigation)', 'gallery-masonryer'); ?></label>
                         </td>
                     </tr>
                     <tr>
@@ -186,7 +204,7 @@ class GalleryMasonryer
             </div>
 
             <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0073aa;">
-                <h3><?php _e('Hinweis:', 'gallery-masonryer'); ?></h3>
+                <h3><?php _e('Hinweise:', 'gallery-masonryer'); ?></h3>
                 <p><strong><?php _e('Bildgrößen:', 'gallery-masonryer'); ?></strong></p>
                 <ul>
                     <li>
@@ -200,6 +218,14 @@ class GalleryMasonryer
                     </li>
                 </ul>
                 <p><?php _e('Die Anzahl der Spalten wird aus den Gutenberg Gallery Block Einstellungen übernommen.', 'gallery-masonryer'); ?></p>
+
+                <p><strong><?php _e('Hash-Navigation:', 'gallery-masonryer'); ?></strong></p>
+                <ul>
+                    <li><?php _e('Ermöglicht Deep-Linking zu spezifischen Bildern (z.B. #slide-2)', 'gallery-masonryer'); ?></li>
+                    <li><?php _e('Browser-Zurück-Button schließt die Lightbox oder navigiert zwischen Bildern', 'gallery-masonryer'); ?></li>
+                    <li><?php _e('URLs können geteilt werden und öffnen automatisch die entsprechende Lightbox', 'gallery-masonryer'); ?></li>
+                    <li><?php _e('Funktioniert mit mehreren Galerien pro Seite', 'gallery-masonryer'); ?></li>
+                </ul>
             </div>
         </div>
 
@@ -648,7 +674,7 @@ JS;
                 'gallery-masonryer',
                 '',
                 [],
-                '1.3.3',
+                '1.3.4',
                 true
         );
         wp_enqueue_script('gallery-masonryer');
@@ -656,16 +682,17 @@ JS;
                 'gallery-masonryer',
                 '',
                 [],
-                '1.3.3'
+                '1.3.4'
         );
         wp_enqueue_style('gallery-masonryer');
 
-        // Plugin-Optionen ins JS übergeben (KORRIGIERT - nur ein Array!)
+        // Plugin-Optionen ins JS übergeben
         $js_options = [
                 'enableLightbox' => get_option('enable_lightbox', false),
                 'lightboxBackgroundColor' => get_option('lightbox_background_color', '#000000'),
                 'lightboxBackgroundOpacity' => get_option('lightbox_background_opacity', 90),
                 'lightboxUIColor' => get_option('lightbox_ui_color', '#ffffff'),
+                'enableHashNavigation' => get_option('enable_hash_navigation', false),
         ];
 
         wp_add_inline_script(
@@ -697,9 +724,46 @@ document.addEventListener(\'DOMContentLoaded\', function() {
         let swiperContainer = null;
         let keydownHandler = null;
         let clickHandler = null;
+        let hashChangeHandler = null;
+        let currentGalleryIndex = 0;
+        let isHashNavigating = false;
+        
+        const enableHashNavigation = (typeof GalleryMasonryerOptions !== \'undefined\' && GalleryMasonryerOptions.enableHashNavigation);
+        
+        function updateHash(galleryIndex, slideIndex) {
+            if (!enableHashNavigation) return;
+            isHashNavigating = true;
+            window.history.pushState(null, null, `#slide-${slideIndex}`);
+            setTimeout(() => { isHashNavigating = false; }, 100);
+        }
+        
+        function clearHash() {
+            if (!enableHashNavigation) return;
+            if (window.location.hash) {
+                window.history.pushState(null, null, window.location.pathname + window.location.search);
+            }
+        }
+        
+        function parseHashForGallerySlide() {
+            if (!enableHashNavigation) return null;
+            const hash = window.location.hash;
+            const match = hash.match(/#slide-(\\d+)/);
+            if (match) {
+                return {
+                    galleryIndex: parseInt(match[1]),
+                    slideIndex: parseInt(match[2])
+                };
+            }
+            return null;
+        }
         
         function closeLightbox() {
             console.log(\'Closing lightbox...\');
+            
+            if (hashChangeHandler) {
+                window.removeEventListener(\'hashchange\', hashChangeHandler);
+                hashChangeHandler = null;
+            }
             
             if (keydownHandler) {
                 document.removeEventListener(\'keydown\', keydownHandler);
@@ -731,6 +795,7 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                 swiperContainer = null;
             }
             
+            clearHash();
             document.body.style.overflow = \'\';
             document.body.classList.remove(\'lightbox-open\');
         }
@@ -749,12 +814,14 @@ document.addEventListener(\'DOMContentLoaded\', function() {
             return \'rgba(0, 0, 0, 0.95)\';
         }
         
-        function createLightbox(gallery, startIndex = 0) {
+        function createLightbox(gallery, startIndex = 0, galleryIndex = 0) {
             if (swiperContainer) {
                 closeLightbox();
-                setTimeout(() => createLightbox(gallery, startIndex), 100);
+                setTimeout(() => createLightbox(gallery, startIndex, galleryIndex), 100);
                 return;
             }
+            
+            currentGalleryIndex = galleryIndex;
             
             swiperContainer = document.createElement(\'div\');
             swiperContainer.className = \'swiper lightbox-overlay\';
@@ -845,6 +912,19 @@ document.addEventListener(\'DOMContentLoaded\', function() {
             document.body.appendChild(swiperContainer);
             document.body.classList.add(\'lightbox-open\');
             
+            // Hash Navigation Event Listener
+            if (enableHashNavigation) {
+                hashChangeHandler = function() {
+                    if (isHashNavigating) return;
+                    const hashData = parseHashForGallerySlide();
+                    if (!hashData && swiperInstance) {
+                        // Hash wurde entfernt - Lightbox schließen
+                        closeLightbox();
+                    }
+                };
+                window.addEventListener(\'hashchange\', hashChangeHandler);
+            }
+            
             try {
                 swiperInstance = new Swiper(swiperContainer, {
                     loop: images.length > 1,
@@ -864,6 +944,14 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                     on: {
                         init: function() {
                             console.log(\'Swiper initialized\');
+                            if (enableHashNavigation) {
+                                updateHash(currentGalleryIndex, startIndex);
+                            }
+                        },
+                        slideChange: function() {
+                            if (enableHashNavigation) {
+                                updateHash(currentGalleryIndex, this.activeIndex);
+                            }
                         }
                     }
                 });
@@ -902,7 +990,7 @@ document.addEventListener(\'DOMContentLoaded\', function() {
             const galleries = document.querySelectorAll(\'.wp-block-gallery.masonryer-active\');
             console.log(\'Found galleries:\', galleries.length);
             
-            galleries.forEach(gallery => {
+            galleries.forEach((gallery, galleryIndex) => {
                 const images = gallery.querySelectorAll(\'.wp-block-image img, figure.wp-block-image img\');
                 console.log(\'Gallery images:\', images.length);
                 
@@ -910,15 +998,28 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                     img.removeEventListener(\'click\', img.lightboxHandler);
                     
                     img.lightboxHandler = function(e) {
-                        console.log(\'Image clicked, index:\', index);
+                        console.log(\'Image clicked, gallery:\', galleryIndex, \'index:\', index);
                         e.preventDefault();
                         e.stopPropagation();
-                        createLightbox(gallery, index);
+                        createLightbox(gallery, index, galleryIndex);
                     };
                     
                     img.addEventListener(\'click\', img.lightboxHandler);
                 });
             });
+        }
+        
+        // Hash Navigation beim Laden der Seite prüfen
+        if (enableHashNavigation) {
+            const hashData = parseHashForGallerySlide();
+            if (hashData) {
+                const galleries = document.querySelectorAll(\'.wp-block-gallery.masonryer-active\');
+                if (galleries[hashData.galleryIndex]) {
+                    setTimeout(() => {
+                        createLightbox(galleries[hashData.galleryIndex], hashData.slideIndex, hashData.galleryIndex);
+                    }, 500);
+                }
+            }
         }
         
         attachLightboxListeners();
