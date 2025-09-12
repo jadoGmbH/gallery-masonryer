@@ -441,6 +441,19 @@ JS;
         $radius = esc_attr(get_option('gallery_radius', '0px'));
         $random_placement = get_option('random_placement', false) ? 'dense' : 'row';
         $ui_color = esc_attr(get_option('lightbox_ui_color', '#ffffff'));
+        // Compute dynamic lightbox background RGBA from options
+        $bg_hex = esc_attr(get_option('lightbox_background_color', '#000000'));
+        $bg_hex = ltrim($bg_hex, '#');
+        if (strlen($bg_hex) === 3) {
+            $bg_hex = $bg_hex[0].$bg_hex[0].$bg_hex[1].$bg_hex[1].$bg_hex[2].$bg_hex[2];
+        }
+        $r = hexdec(substr($bg_hex, 0, 2));
+        $g = hexdec(substr($bg_hex, 2, 2));
+        $b = hexdec(substr($bg_hex, 4, 2));
+        $opacity_percent = absint(get_option('lightbox_background_opacity', 90));
+        $opacity_percent = max(10, min(100, $opacity_percent));
+        $opacity = $opacity_percent / 100;
+        $lightbox_overlay_rgba = sprintf('rgba(%d, %d, %d, %s)', $r, $g, $b, rtrim(rtrim(number_format($opacity, 2, '.', ''), '0'), '.'));
 
         ?>
         <style>
@@ -449,11 +462,39 @@ JS;
                 backdrop-filter: blur(6px);
             }
 
+            .swiper-pagination{
+                color: <?php echo $lightbox_overlay_rgba; ?> !important;
+                bottom: 3vw;
+            }
+
+            .swiper-pagination-spancontainer{
+                background-color: <?php echo $ui_color; ?> !important;
+                padding: 0.5rem 1.25rem !important;
+                border-radius: <?php echo $radius; ?> !important;
+                color: <?php echo $lightbox_overlay_rgba; ?> !important;
+            }
+
+            .swiper-pagination span{
+                color: <?php echo $lightbox_overlay_rgba; ?> !important;
+            }
+
             .swiper-button-next,
             .swiper-button-prev,
             .swiper-pagination,
             .masonryer-lightbox-close {
                 color: <?php echo $ui_color; ?> !important;
+                opacity: 1;
+            }
+
+            .swiper-button-next:hover,
+            .swiper-button-prev:hover,
+            .masonryer-lightbox-close:hover {
+                opacity: 0.6;
+            }
+
+            .swiper-button-next:after,
+            .swiper-button-prev:after{
+                font-size: 2.5rem;
             }
 
             .wp-block-gallery.masonryer-active.has-nested-images,
@@ -591,6 +632,19 @@ JS;
                     gap: <?php echo $gap; ?>px !important;
                     grid-auto-rows: auto !important;
                     grid-auto-flow: dense !important;
+                }
+
+                .swiper-button-prev, .swiper-rtl .swiper-button-next{
+                    left: 0;
+                }
+
+                .swiper-button-next, .swiper-rtl .swiper-button-prev{
+                    right: 0;
+                }
+
+                .swiper-button-next:after,
+                .swiper-button-prev:after{
+                    font-size: 0.75rem;
                 }
 
                 .wp-block-gallery.masonryer-active .wp-block-image.masonryer-square {
@@ -859,6 +913,11 @@ document.addEventListener(\'DOMContentLoaded\', function() {
             const pagination = document.createElement(\'div\');
             pagination.className = \'swiper-pagination\';
             
+            // Inner container for pagination spans
+            const paginationSpanContainer = document.createElement(\'div\');
+            paginationSpanContainer.className = \'swiper-pagination-spancontainer\';
+            pagination.appendChild(paginationSpanContainer);
+            
             const closeButton = document.createElement(\'div\');
             closeButton.innerHTML = \'×\';
             
@@ -949,7 +1008,7 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                         prevEl: \'.swiper-button-prev\'
                     },
                     pagination: {
-                        el: \'.swiper-pagination\',
+                        el: paginationSpanContainer,
                         clickable: true,
                         type: \'fraction\'
                     },
