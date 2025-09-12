@@ -945,12 +945,16 @@ document.addEventListener(\'DOMContentLoaded\', function() {
                         init: function() {
                             console.log(\'Swiper initialized\');
                             if (enableHashNavigation) {
-                                updateHash(currentGalleryIndex, startIndex);
+                                // Verwende realIndex für korrekte Hash-Navigation bei Loop-Modus
+                                const slideIndex = this.realIndex !== undefined ? this.realIndex : startIndex;
+                                updateHash(currentGalleryIndex, slideIndex);
                             }
                         },
                         slideChange: function() {
                             if (enableHashNavigation) {
-                                updateHash(currentGalleryIndex, this.activeIndex);
+                                // Verwende realIndex statt activeIndex für korrekte Hash-Navigation
+                                const slideIndex = this.realIndex !== undefined ? this.realIndex : this.activeIndex;
+                                updateHash(currentGalleryIndex, slideIndex);
                             }
                         }
                     }
